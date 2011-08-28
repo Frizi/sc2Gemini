@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1314556889 source:d:\codeblocks\gemini\src\gehack\main.cpp
+	"main.h"
+	<cstdio>
+
+1314314878 d:\codeblocks\gemini\src\gehack\main.h
+	<windows.h>
+

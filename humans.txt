@@ -1,0 +1,10 @@
+by Frizi
+Based on idea/code from wc3Grimoire and my own research.
+
+Many thanks to grimoire contributors:
+Bryan "PipeDream" Steinbach
+Andy "xttocs" Scott
+Mike "PitzerMike" Pitzer
+Victor "Vexorian" Soliz
+Nikolaj "MindWorX" Mariager
+http://www.wc3campaigns.net/showthread.php?t=86652
