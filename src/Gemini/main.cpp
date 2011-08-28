@@ -7,6 +7,9 @@
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
+
+#include <lua.h>
+
 HINSTANCE hInst;
 
 //const DWORD addrCreateFile = 0x00cb20ea;
@@ -69,7 +72,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     memcpy((void *)((size_t)loadDll + 8), &dllString, 4);
     memcpy((void *)((size_t)loadDll + 13), &addr_loadLibraryA, 4);
 
-    for(int i=0; i<stubLen; i++)
+    for(unsigned int i=0; i<stubLen; i++)
     {
         sstream << (uint16_t)(loadDll[i]) << std::endl;
     }
