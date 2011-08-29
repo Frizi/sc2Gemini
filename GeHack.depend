@@ -1,8 +1,16 @@
 # depslib dependency file v1.0
-1314556889 source:d:\codeblocks\gemini\src\gehack\main.cpp
+1314653334 source:d:\codeblocks\gemini\src\gehack\main.cpp
 	"main.h"
 	<cstdio>
+	"iat.h"
+	<sstream>
 
 1314314878 d:\codeblocks\gemini\src\gehack\main.h
 	<windows.h>
+
+1313765692 d:\codeblocks\gemini\src\gehack\iat.h
+
+1314653160 source:d:\codeblocks\gemini\src\gehack\iat.cpp
+	<windows.h>
+	"iat.h"
 

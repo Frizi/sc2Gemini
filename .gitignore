@@ -4,3 +4,4 @@ obj_*/*
 *~
 *.cbTemp
 *Thumbs.db
+*.exe

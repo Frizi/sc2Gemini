@@ -4,5 +4,5 @@ dofile( "findStarcraft.lua" );
 print (path);
 
 procInfo = gem.startExe(path..relExePath,"SC2Editor.exe "..gem.getArgs());
-gem.sleep(5);
+gem.sleep(15);
 gem.injectDll(procInfo, gem.getCwd().."\\bin\\geHack.dll");
