@@ -5,7 +5,7 @@
 1189868558 d:\codeblocks\gemini\src\gemini\resource.h
 	<windows.h>
 
-1314620233 source:d:\codeblocks\gemini\src\gemini\main.cpp
+1314639043 source:d:\codeblocks\gemini\src\gemini\main.cpp
 	<windows.h>
 	"resource.h"
 	<string>
@@ -13,6 +13,7 @@
 	<cstdio>
 	<cstdlib>
 	"luautil.h"
+	"injections.h"
 
 1313765691 source:d:\codeblocks\gemini\src\gemini\folderbrowser.cpp
 	"folderbrowser.h"
@@ -58,4 +59,11 @@
 
 1314565650 d:\codeblocks\gemini\lua\include\lualib.h
 	"lua.h"
+
+1314639180 source:d:\codeblocks\gemini\src\gemini\injections.cpp
+	"injections.h"
+	<cstdio>
+
+1314639122 d:\codeblocks\gemini\src\gemini\injections.h
+	<windows.h>
 
