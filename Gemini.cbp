@@ -5,9 +5,10 @@
 		<Option title="Gemini" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="src\Gemini\;" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\Gemini" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\GeminiD" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj_exe\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -42,6 +43,8 @@
 		</Linker>
 		<Unit filename="src\Gemini\folderbrowser.cpp" />
 		<Unit filename="src\Gemini\folderbrowser.h" />
+		<Unit filename="src\Gemini\injections.cpp" />
+		<Unit filename="src\Gemini\injections.h" />
 		<Unit filename="src\Gemini\luautil.cpp" />
 		<Unit filename="src\Gemini\luautil.h" />
 		<Unit filename="src\Gemini\main.cpp" />

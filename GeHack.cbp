@@ -40,6 +40,8 @@
 				</Linker>
 			</Target>
 		</Build>
+		<Unit filename="src\GeHack\iat.cpp" />
+		<Unit filename="src\GeHack\iat.h" />
 		<Unit filename="src\GeHack\main.cpp" />
 		<Unit filename="src\GeHack\main.h" />
 		<Extensions>
