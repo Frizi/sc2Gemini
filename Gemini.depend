@@ -5,11 +5,57 @@
 1189868558 d:\codeblocks\gemini\src\gemini\resource.h
 	<windows.h>
 
-1314558699 source:d:\codeblocks\gemini\src\gemini\main.cpp
+1314580749 source:d:\codeblocks\gemini\src\gemini\main.cpp
 	<windows.h>
 	"resource.h"
 	<string>
 	<sstream>
 	<cstdio>
 	<cstdlib>
+	"luautil.h"
+
+1313765691 source:d:\codeblocks\gemini\src\gemini\folderbrowser.cpp
+	"folderbrowser.h"
+
+1314578590 d:\codeblocks\gemini\src\gemini\folderbrowser.h
+	<windows.h>
+	<shlobj.h>
+
+1314579526 source:d:\codeblocks\gemini\src\gemini\luautil.cpp
+	<windows.h>
+	<unistd.h>
+	<string.h>
+	"luautil.h"
+	"folderbrowser.h"
+
+1314578572 d:\codeblocks\gemini\src\gemini\luautil.h
+	<lua.h>
+	<lauxlib.h>
+	<lualib.h>
+
+1314565650 d:\codeblocks\gemini\lua\include\lua.h
+	<stdarg.h>
+	<stddef.h>
+	"luaconf.h"
+
+1314565650 d:\codeblocks\gemini\lua\include\luaconf.h
+	<limits.h>
+	<stddef.h>
+	<unistd.h>
+	<io.h>
+	<stdio.h>
+	<stdio.h>
+	<readline/readline.h>
+	<readline/history.h>
+	<assert.h>
+	<math.h>
+	<unistd.h>
+
+1314565650 d:\codeblocks\gemini\lua\include\lauxlib.h
+	<stddef.h>
+	<stdio.h>
+	"lua.h"
+
+1314565650 d:\codeblocks\gemini\lua\include\lualib.h
+	"lua.h"
 
