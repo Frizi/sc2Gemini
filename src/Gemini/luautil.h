@@ -29,5 +29,6 @@ int lua_log(lua_State *l);
 int lua_logf(lua_State *l);
 int lua_logt(lua_State *l);
 int lua_openlink(lua_State *l);
+int lua_regKeyExists(lua_State *l);
 
 #endif

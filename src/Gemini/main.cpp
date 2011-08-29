@@ -68,6 +68,7 @@ int lua_startexe(lua_State *l)
 
 void injectDll(PROCESS_INFORMATION* pi, const char* dllName)
 {
+    try {
     const uint8_t loadDll[] = { // little endian x86 (_64)
         0x68, 0xEF, 0xBE, 0xAD, 0xDE,   // PUSH 0DEADBEEFh      ; placeholder oldEip
         0x9C,                           // PUSHFD               ; save registers
@@ -106,6 +107,10 @@ void injectDll(PROCESS_INFORMATION* pi, const char* dllName)
     WriteProcessMemory( pi->hProcess, stub, (void *)((size_t)loadDll), stubLen, NULL);
     SetThreadContext( pi->hThread, &ctx);
     ResumeThread( pi->hThread );
+    } catch(const char* err) {
+        fprintf(stderr,"Error while injecting %s: %s\n",dllName,err);
+        return;
+    }
 }
 
 int lua_injectDll(lua_State *l)
@@ -166,7 +171,6 @@ int lua_getargs(lua_State *l)
 	return 1;
 }
 
-
 void initluastate(lua_State *lua)
 {
 	luaL_openlibs(lua);
@@ -174,23 +178,25 @@ void initluastate(lua_State *lua)
 
     // must-have functions
 	lua_registert(lua,"errorExit",lua_errorExit);
-	lua_registert(lua,"startexe",lua_startexe);
+	lua_registert(lua,"startExe",lua_startexe);
 	lua_registert(lua,"freeProcHandle",lua_freeProcHandle);
 	lua_registert(lua,"injectDll",lua_injectDll);
 	lua_registert(lua,"sleep",lua_sleep);
-	lua_registert(lua,"messagebox",lua_messagebox);
+	lua_registert(lua,"messageBox",lua_messagebox);
 
     // from grimoire, may be useful
-    lua_registert(lua,"getargs",lua_getargs);
-    lua_registert(lua,"openlink",lua_openlink);
-	lua_registert(lua,"getcwd",lua_getcwd);
-	lua_registert(lua,"regopenkey",lua_regopenkey);
-	lua_registert(lua,"regdeletekey",lua_regdeletekey);
-	lua_registert(lua,"regsetstring",lua_regsetstring);
-	lua_registert(lua,"regsetdword",lua_regsetdword);
+    lua_registert(lua,"browse",lua_browseforfolder);
+    lua_registert(lua,"getArgs",lua_getargs);
+    lua_registert(lua,"openLink",lua_openlink);
+	lua_registert(lua,"getCwd",lua_getcwd);
+	lua_registert(lua,"getRegPair",lua_regopenkey);
+	lua_registert(lua,"deleteRegPair",lua_regdeletekey);
+	lua_registert(lua,"setRegString",lua_regsetstring);
+	lua_registert(lua,"setRegDword",lua_regsetdword);
 	lua_registert(lua,"exists",lua_exists);
-	lua_registert(lua,"browseforfolder",lua_browseforfolder);
-	lua_registert(lua,"getmodulehandle",lua_getmodulehandle);
+	lua_registert(lua,"browseForFolder",lua_browseforfolder);
+	lua_registert(lua,"getModuleHandle",lua_getmodulehandle);
+	lua_registert(lua,"regKeyExists",lua_regKeyExists);
 
     lua_setglobal(lua,"gem");
 }

@@ -78,6 +78,23 @@ HKEY convertkeyname(const char *&path) {
 	return HKEY_CURRENT_USER;
 }
 
+bool regKeyExists(const char *keyname,const char *valuename)
+{
+    int ret;
+    HKEY key;
+    try {
+		HKEY base = convertkeyname(keyname);
+		ret = RegOpenKeyEx(base,keyname,0,KEY_QUERY_VALUE,&key);
+		if(ret != ERROR_SUCCESS)
+            return 0;
+        else
+            return 1;
+    }catch(const char *error) {
+        printf("Attempt to check if %s\\%s exists failed: %s\n",keyname,valuename,error);
+    }
+    return 0;
+}
+
 
 DWORD regopenkey(const char *keyname,const char *valuename,void *out)
 {
@@ -104,6 +121,13 @@ DWORD regopenkey(const char *keyname,const char *valuename,void *out)
 	}
 }
 
+int lua_regKeyExists(lua_State *l)
+{
+	const char *keyname = lua_tostring(l,1);
+	const char *value = lua_tostring(l,2);
+	lua_pushboolean(l,regKeyExists(keyname,value));
+	return 1;
+}
 
 int lua_regopenkey(lua_State *l)
 {
