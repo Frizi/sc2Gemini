@@ -8,7 +8,9 @@
 
 // a sample exported function
 
+// todo: move additional pipe functions and constants to separated file
 PipeClient client("\\\\.\\pipe\\sc2gemini");
+const unsigned int maxMessageLen = 4096;
 
 HWND __stdcall CreateWindowExAWrap(DWORD dwExStyle,LPCSTR lpClassName,LPCSTR lpWindowName,DWORD dwStyle,int X,int Y,int nWidth,int nHeight,HWND hWndParent,HMENU hMenu,HINSTANCE hInstance,LPVOID lpParam)
 {
@@ -29,20 +31,63 @@ HWND __stdcall CreateWindowExAWrap(DWORD dwExStyle,LPCSTR lpClassName,LPCSTR lpW
     return window;
 }
 
+
+
 HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY_ATTRIBUTES sec, DWORD disp, DWORD flags, HANDLE templatef)
 {
+    // anything will be done before executing original CreateFileW
+
+    // buffer for message output
+    char msg[maxMessageLen];
+
+    // store filename in buffer as ANSI
+	char filename[maxMessageLen];
+    WideCharToMultiByte(CP_ACP,0,fn,-1,filename,maxMessageLen,NULL,NULL);
+    filename[maxMessageLen-1]=0; // anti overflow
+
+    const size_t strEnd = strlen(filename);
+    // pattern of last saved (!! before cleanup) file before .SC2Map save
+    const char* pattern = ".SC2Map.temp\\MapScript.galaxy";
+    //const char* pattern = ".SC2Map.temp\\";
+    const size_t patternLen = strlen(pattern);
+
+    //* // debug filename output
+    strcpy(msg, "msg.print.CreateFileW: ");
+    strcat(msg,filename);
+    client.Write(msg,maxMessageLen);
+    //*/
+
+    // match end of string
+    if((strEnd >= patternLen) && !memcmp(filename+(strEnd-patternLen), pattern, patternLen))
+    // match substring
+    //if((strstr(filename, pattern) != NULL))
+    {
+
+        // this is save
+        // find temp directory with unpacked map data
+        const char* pattern = ".SC2Map.temp\\";
+        const size_t patternLen = strlen(pattern);
+
+        const char* found = strstr(filename, pattern);
+        unsigned int foundPos = found-filename;
+        filename[foundPos + patternLen-1] = 0; // terminate string just before slash
+
+        strcpy(msg, "msg.save.");
+        strcat(msg, filename);
+        msg[maxMessageLen-1] = 0; // anti overflow
+        client.Write(msg,maxMessageLen);
 
 
-    const size_t bufLen = 1024;
-	char buf[bufLen];
-	memcpy(buf,"msg.",4);
-    WideCharToMultiByte(CP_ACP,0,fn,-1,buf+4,bufLen-4,NULL,NULL);
-    buf[bufLen-1]=0; // anti overflow
-	//wcscpy((wchar_t*)(buf+4), fn);
-    HANDLE h = CreateFileA(buf+4,access,share,sec,disp,flags,templatef);
-
-	client.Write(buf,strlen(buf));
-	//MessageBoxW(NULL, fn, L"CreateFileW", MB_ICONINFORMATION + MB_OK);
+        // wait for message from external process
+        strcpy(msg, "msg.aftersave");
+        char buf[maxMessageLen];
+        do
+        {
+            client.Read(buf,maxMessageLen);
+        } while(strcmp(buf,msg));
+    }
+    // finally, execute original funcion
+    HANDLE h = CreateFileW(fn,access,share,sec,disp,flags,templatef);
 	return h;
 }
 
@@ -68,6 +113,9 @@ extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvRese
 
 			if (!iat.RedirectImport("CreateFileW",(void *)CreateFileWWrap))
 				throw("Could not redirect CreateFileW");
+
+            if (!iat.LocateForModule("storm.dll"))
+				throw("Could not locate storm.dll");
 
         }   catch(const char *s) {
             MessageBoxA(NULL,s,"GeHack.dll",MB_ICONERROR);

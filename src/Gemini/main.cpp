@@ -128,15 +128,73 @@ int lua_connectServer(lua_State *l)
     return 1;
 }
 
+const unsigned int maxMessageLen = 4096;
+
 int lua_readMessage(lua_State *l)
 {
-    char buffer[1024];
-    server.Read(buffer,1024);
+    char buffer[maxMessageLen];
+    server.Read(buffer,maxMessageLen);
     //size_t msgLen = wcslen((wchar_t*)(buffer+4))>>1;
-    //if(strncmp("msg.",buffer,4))//&& buffer[4] != 0x00)
-        lua_pushstring(l,buffer+4);
-    //else
-    //    lua_pushboolean(l,false);
+    if((!memcmp("msg.",buffer,4)) && buffer[4] != 0x00)
+    {
+        char* param = strstr(buffer+4,".");
+        if(param == NULL)
+        {
+            lua_pushstring(l,buffer+4);
+            lua_pushstring(l,"");
+        }
+        else
+        {
+            *param = 0; // replace dot with null. param is just buffer with offset.
+            lua_pushstring(l,buffer+4);
+            lua_pushstring(l,param+1);
+        }
+    }
+    else
+    {
+        lua_pushboolean(l,false);
+        lua_pushboolean(l,false);
+    }
+    return 2;
+}
+
+int lua_readData(lua_State *l)
+{
+    char buffer[maxMessageLen];
+    server.Read(buffer,maxMessageLen);
+    lua_pushstring(l,buffer);
+    return 1;
+}
+
+
+int lua_writeMessage(lua_State *l)
+{
+    char buffer[maxMessageLen];
+    memcpy(buffer, "msg.",4);
+
+    const char *message = lua_tostring(l,1);
+    const char *param = lua_tostring(l,2);
+
+    strcpy(buffer+4, message);
+
+    if(param != NULL)
+    {
+        strcat(buffer, ".");
+        strcat(buffer,param);
+    }
+    buffer[maxMessageLen-1] = 0; // anti overflow
+    server.Write(buffer,maxMessageLen);
+
+    return 1;
+}
+
+int lua_writeData(lua_State *l)
+{
+    char buffer[maxMessageLen];
+    const char *data = lua_tostring(l,1);
+    strcpy(buffer, data);
+    buffer[maxMessageLen-1] = 0;
+    server.Write(buffer,maxMessageLen);
     return 1;
 }
 
@@ -147,6 +205,9 @@ void initluastate(lua_State *lua)
 
     // must-have functions
 	lua_registert(lua,"connectServer",lua_connectServer);
+	lua_registert(lua,"writeData",lua_writeData);
+	lua_registert(lua,"writeMessage",lua_writeMessage);
+	lua_registert(lua,"readData",lua_readData);
 	lua_registert(lua,"readMessage",lua_readMessage);
 	lua_registert(lua,"errorExit",lua_errorExit);
 	lua_registert(lua,"startExe",lua_startexe);

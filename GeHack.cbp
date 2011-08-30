@@ -44,6 +44,8 @@
 		<Unit filename="src\GeHack\iat.h" />
 		<Unit filename="src\GeHack\main.cpp" />
 		<Unit filename="src\GeHack\main.h" />
+		<Unit filename="src\pipe.cpp" />
+		<Unit filename="src\pipe.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

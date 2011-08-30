@@ -1,7 +1,8 @@
 // this file is from grimoire source
 // see humans.txt for more info
+// file was modified
 
-#inndef __PIPE_H__
+#ifndef __PIPE_H__
 #define __PIPE_H_
 
 class PipeServer
