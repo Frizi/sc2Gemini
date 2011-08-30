@@ -1,3 +1,6 @@
+// this file is from grimoire source
+// see humans.txt for more info
+
 // IAT patching class
 // - Andy Scott aka xttocs
 //////////////////////////////////////////////////////////////////////

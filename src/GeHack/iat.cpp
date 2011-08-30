@@ -1,3 +1,6 @@
+// this file is from grimoire source
+// see humans.txt for more info
+
 // CIAT.cpp: implementation of the CIAT class.
 // - Andy Scott aka xttocs
 //////////////////////////////////////////////////////////////////////
@@ -44,9 +47,9 @@ bool CIAT::LocateForModule(HMODULE hApiModule)
 	if (pNTHeader->Signature != IMAGE_NT_SIGNATURE)
 		return false;
 
-	DWORD importRVA = pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;	
+	DWORD importRVA = pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
 	PIMAGE_IMPORT_DESCRIPTOR pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR)((ULONG_PTR)(m_hModule) + (ULONG_PTR)(importRVA));
-	
+
 	while(pImportDesc->FirstThunk)
 	{
 		/*
@@ -82,7 +85,7 @@ bool CIAT::RedirectImport(const char *Api, void *NewLocation)
 
 	if (RoutineAddress == 0)
 		return false;
-	
+
 	while (pThunk->u1.Function)
 	{
 		ULONG_PTR* Address = (ULONG_PTR*)&pThunk->u1.Function;

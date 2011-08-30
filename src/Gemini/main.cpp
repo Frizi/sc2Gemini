@@ -234,8 +234,9 @@ int main(int argc, const char **argv)
         lua_State *lua = lua_open();
         initluastate(lua);
         runscript(lua, scriptfile);
-
         lua_close(lua);
+        server.Disconnect();
+
     } catch(const char *err) {
 		//dprintf("Error: %s\n",err);
 		fprintf(stderr,"Error: %s\n",err);
