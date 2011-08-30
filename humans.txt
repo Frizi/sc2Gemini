@@ -1,6 +1,9 @@
 by Frizi
 Based on idea/code from wc3Grimoire and my own research.
 
+Thanks to midiway for complete address table!
+
+
 Many thanks to grimoire contributors:
 Bryan "PipeDream" Steinbach
 Andy "xttocs" Scott

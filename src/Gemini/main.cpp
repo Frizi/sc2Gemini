@@ -11,6 +11,10 @@
 #include "luautil.h"
 #include "injections.h"
 
+#include "../pipe.h"
+
+PipeServer server("\\\\.\\pipe\\sc2gemini");
+
 void ErrorExit(const char* lpszFunction)
 {
     // Retrieve the system error message for the last-error code
@@ -106,12 +110,44 @@ int lua_getargs(lua_State *l)
 	return 1;
 }
 
+int lua_connectServer(lua_State *l)
+{
+    static bool connected = false;
+    if(!connected)
+    {
+        try
+        {
+            if(!server.Connect())
+                throw("Failed to initialize pipe\n");
+            connected = true;
+        } catch(const char* err) {
+            fprintf(stderr,"Error: %s\n",err);
+            return -1;
+        }
+    }
+    return 1;
+}
+
+int lua_readMessage(lua_State *l)
+{
+    char buffer[1024];
+    server.Read(buffer,1024);
+    //size_t msgLen = wcslen((wchar_t*)(buffer+4))>>1;
+    //if(strncmp("msg.",buffer,4))//&& buffer[4] != 0x00)
+        lua_pushstring(l,buffer+4);
+    //else
+    //    lua_pushboolean(l,false);
+    return 1;
+}
+
 void initluastate(lua_State *lua)
 {
 	luaL_openlibs(lua);
 	lua_newtable(lua);
 
     // must-have functions
+	lua_registert(lua,"connectServer",lua_connectServer);
+	lua_registert(lua,"readMessage",lua_readMessage);
 	lua_registert(lua,"errorExit",lua_errorExit);
 	lua_registert(lua,"startExe",lua_startexe);
 	lua_registert(lua,"freeProcHandle",lua_freeProcHandle);
@@ -188,9 +224,13 @@ int main(int argc, const char **argv)
 {
     xargc = argc;
     xargv = argv;
+
+
+
     const char *scriptfile = getscript(argc,argv);
 
     try {
+
         lua_State *lua = lua_open();
         initluastate(lua);
         runscript(lua, scriptfile);
