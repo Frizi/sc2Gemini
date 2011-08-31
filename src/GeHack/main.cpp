@@ -31,7 +31,8 @@ HWND __stdcall CreateWindowExAWrap(DWORD dwExStyle,LPCSTR lpClassName,LPCSTR lpW
     return window;
 }
 
-
+bool redirectRead = false;
+char globalMsg[maxMessageLen];
 
 HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY_ATTRIBUTES sec, DWORD disp, DWORD flags, HANDLE templatef)
 {
@@ -62,7 +63,7 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
     // match substring
     //if((strstr(filename, pattern) != NULL))
     {
-
+        redirectRead = true;
         // this is save
         // find temp directory with unpacked map data
         const char* pattern = ".SC2Map.temp\\";
@@ -72,13 +73,27 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
         unsigned int foundPos = found-filename;
         filename[foundPos + patternLen-1] = 0; // terminate string just before slash
 
-        strcpy(msg, "msg.save.");
-        strcat(msg, filename);
-        msg[maxMessageLen-1] = 0; // anti overflow
-        client.Write(msg,maxMessageLen);
+        strcpy(globalMsg, "msg.save.");
+        strcat(globalMsg, filename);
+        globalMsg[maxMessageLen-1] = 0; // anti overflow
 
+    }
+    // finally, execute original funcion
+    HANDLE h = CreateFileW(fn,access,share,sec,disp,flags,templatef);
+	return h;
+}
+
+BOOL WINAPI ReadFileWrap(HANDLE hFile,LPVOID lpBuffer,DWORD nNumberOfBytesToRead,LPDWORD lpNumberOfBytesRead,LPOVERLAPPED lpOverlapped)
+{
+    if(redirectRead)
+    {
+        redirectRead = false;
+        // interrupt and send save message, we got first file read after map save
+
+        client.Write(globalMsg,maxMessageLen);
 
         // wait for message from external process
+        char msg[maxMessageLen];
         strcpy(msg, "msg.aftersave");
         char buf[maxMessageLen];
         do
@@ -86,10 +101,9 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
             client.Read(buf,maxMessageLen);
         } while(strcmp(buf,msg));
     }
-    // finally, execute original funcion
-    HANDLE h = CreateFileW(fn,access,share,sec,disp,flags,templatef);
-	return h;
+    return ReadFile(hFile,lpBuffer,nNumberOfBytesToRead,lpNumberOfBytesRead,lpOverlapped);
 }
+
 
 extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -113,9 +127,11 @@ extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvRese
 
 			if (!iat.RedirectImport("CreateFileW",(void *)CreateFileWWrap))
 				throw("Could not redirect CreateFileW");
+			if (!iat.RedirectImport("ReadFile",(void *)ReadFileWrap))
+				throw("Could not redirect ReadFile");
 
-            if (!iat.LocateForModule("storm.dll"))
-				throw("Could not locate storm.dll");
+            //if (!iat.LocateForModule("storm.dll"))
+			//	throw("Could not locate storm.dll");
 
         }   catch(const char *s) {
             MessageBoxA(NULL,s,"GeHack.dll",MB_ICONERROR);

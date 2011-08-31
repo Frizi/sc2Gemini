@@ -82,7 +82,7 @@ int lua_messagebox(lua_State *l)
 {
 	const char *msg = lua_tostring(l,1);
 	const char *title = lua_tostring(l,2);
-	MessageBoxA(NULL,msg,title,0);
+	MessageBoxA(NULL,msg,title,MB_OK);
 	return 1;
 }
 

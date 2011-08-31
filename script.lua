@@ -21,9 +21,10 @@ while true do -- event loop
 			
 			-- perform all onsave actions, editor is now blocked waiting for message
 			-- local file = assert(io.open(param.."MapScript.galaxy", "w"));
-			file:write("
+			-- file:write("
+			gem.messageBox("got save","gemini");
 			
-			--gem.writeMessage("aftersave");
+			gem.writeMessage("aftersave");
 		else
 			print ("unknown message: "..msg..'.'..param);
 		end
