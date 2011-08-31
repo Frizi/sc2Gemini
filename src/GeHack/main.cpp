@@ -12,6 +12,7 @@
 PipeClient client("\\\\.\\pipe\\sc2gemini");
 const unsigned int maxMessageLen = 4096;
 
+/*
 HWND __stdcall CreateWindowExAWrap(DWORD dwExStyle,LPCSTR lpClassName,LPCSTR lpWindowName,DWORD dwStyle,int X,int Y,int nWidth,int nHeight,HWND hWndParent,HMENU hMenu,HINSTANCE hInstance,LPVOID lpParam)
 {
 	HWND window = CreateWindowExA(dwExStyle,lpClassName,lpWindowName,dwStyle ,X,Y,nWidth,nHeight,hWndParent,hMenu,hInstance,lpParam);
@@ -30,56 +31,94 @@ HWND __stdcall CreateWindowExAWrap(DWORD dwExStyle,LPCSTR lpClassName,LPCSTR lpW
 
     return window;
 }
+*/
 
 bool redirectRead = false;
 char globalMsg[maxMessageLen];
 
+HANDLE tempFileHandle;
+WCHAR *tempFn;
+DWORD tempAccess;
+DWORD tempShare;
+LPSECURITY_ATTRIBUTES tempSec;
+DWORD tempDisp;
+DWORD tempFlags;
+HANDLE tempTemplatef;
+
 HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY_ATTRIBUTES sec, DWORD disp, DWORD flags, HANDLE templatef)
 {
     // anything will be done before executing original CreateFileW
+    // goal is to detect map save and send on message on next read
 
-    // buffer for message output
+    char filename[maxMessageLen];
     char msg[maxMessageLen];
 
-    // store filename in buffer as ANSI
-	char filename[maxMessageLen];
+    bool triggered = false;
+
     WideCharToMultiByte(CP_ACP,0,fn,-1,filename,maxMessageLen,NULL,NULL);
     filename[maxMessageLen-1]=0; // anti overflow
-
-    const size_t strEnd = strlen(filename);
-    // pattern of last saved (!! before cleanup) file before .SC2Map save
-    const char* pattern = ".SC2Map.temp\\MapScript.galaxy";
-    //const char* pattern = ".SC2Map.temp\\";
-    const size_t patternLen = strlen(pattern);
 
     //* // debug filename output
     strcpy(msg, "msg.print.CreateFileW: ");
     strcat(msg,filename);
+    if(access & GENERIC_READ)
+        strcat(msg, " r");
+    if(access & GENERIC_WRITE)
+        strcat(msg, " w");
     client.Write(msg,maxMessageLen);
     //*/
 
-    // match end of string
-    if((strEnd >= patternLen) && !memcmp(filename+(strEnd-patternLen), pattern, patternLen))
-    // match substring
-    //if((strstr(filename, pattern) != NULL))
+    if(!(access & GENERIC_WRITE)) // if we cannot write, it isnt that file handle what we need
     {
-        redirectRead = true;
-        // this is save
-        // find temp directory with unpacked map data
-        const char* pattern = ".SC2Map.temp\\";
+        // buffer for message output
+        // store filename in buffer as ANSI
+
+        const size_t strEnd = strlen(filename);
+        // pattern of last accessed file for save before .SC2Map packing
+        const char* pattern = ".SC2Map.temp\\MapScript.galaxy";
+        //const char* pattern = ".SC2Map.temp\\";
         const size_t patternLen = strlen(pattern);
 
-        const char* found = strstr(filename, pattern);
-        unsigned int foundPos = found-filename;
-        filename[foundPos + patternLen-1] = 0; // terminate string just before slash
 
-        strcpy(globalMsg, "msg.save.");
-        strcat(globalMsg, filename);
-        globalMsg[maxMessageLen-1] = 0; // anti overflow
 
+        // match end of string
+        if((strEnd >= patternLen) && !memcmp(filename+(strEnd-patternLen), pattern, patternLen))
+        // match substring
+        //if((strstr(filename, pattern) != NULL))
+        {
+            triggered = true;
+            redirectRead = true;
+            // this is save
+            // find temp directory with unpacked map data
+            const char* pattern = ".SC2Map.temp\\";
+            const size_t patternLen = strlen(pattern);
+
+            const char* found = strstr(filename, pattern);
+            unsigned int foundPos = found-filename;
+            filename[foundPos + patternLen-1] = 0; // terminate string just before slash
+
+            strcpy(globalMsg, "msg.save.");
+            strcat(globalMsg, filename);
+            globalMsg[maxMessageLen-1] = 0; // anti overflow
+
+        }
     }
     // finally, execute original funcion
     HANDLE h = CreateFileW(fn,access,share,sec,disp,flags,templatef);
+
+    // and save temps if triggered
+    if(triggered)
+    {
+        tempFileHandle = h;
+        tempFn = fn;
+        tempAccess = access;
+        tempShare = share;
+        tempSec = sec;
+        tempDisp = disp;
+        tempFlags = flags;
+        tempTemplatef = templatef;
+    }
+
 	return h;
 }
 
@@ -89,7 +128,8 @@ BOOL WINAPI ReadFileWrap(HANDLE hFile,LPVOID lpBuffer,DWORD nNumberOfBytesToRead
     {
         redirectRead = false;
         // interrupt and send save message, we got first file read after map save
-
+        // close handle, because we need write to it
+        //CloseHandle(hFile);
         client.Write(globalMsg,maxMessageLen);
 
         // wait for message from external process
@@ -100,6 +140,9 @@ BOOL WINAPI ReadFileWrap(HANDLE hFile,LPVOID lpBuffer,DWORD nNumberOfBytesToRead
         {
             client.Read(buf,maxMessageLen);
         } while(strcmp(buf,msg));
+
+        // reopen file handle
+        //hFile = CreateFileW(tempFn,tempAccess,tempShare,tempSec,tempDisp,tempFlags,tempTemplatef);
     }
     return ReadFile(hFile,lpBuffer,nNumberOfBytesToRead,lpNumberOfBytesRead,lpOverlapped);
 }
@@ -124,7 +167,8 @@ extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvRese
 
             if (!iat.LocateForModule("kernel32.dll"))
 				throw("Could not locate kernel32.dll");
-
+            //if (!iat.RedirectImport("CreateDirectoryW",(void *)CreateDirectoryWWrap))
+			//	throw("Could not redirect CreateDirectoryW");
 			if (!iat.RedirectImport("CreateFileW",(void *)CreateFileWWrap))
 				throw("Could not redirect CreateFileW");
 			if (!iat.RedirectImport("ReadFile",(void *)ReadFileWrap))

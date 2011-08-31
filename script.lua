@@ -8,28 +8,36 @@ gem.sleep(15);
 gem.injectDll(procInfo, gem.getCwd().."\\bin\\geHack.dll");
 gem.connectServer();
 
-running = true;
-while true do -- event loop
-	msg, param = gem.readMessage();
-	if msg ~= false then
-		if(msg == "exit") then
-			break;
-		elseif(msg == "print") then
-			print (param);
-		elseif(msg == "save") then
-			print ("save, temp dir: "..param);
-			
-			-- perform all onsave actions, editor is now blocked waiting for message
-			-- local file = assert(io.open(param.."MapScript.galaxy", "w"));
-			-- file:write("
-			gem.messageBox("got save","gemini");
-			
-			gem.writeMessage("aftersave");
+function main()
+	running = true;
+	while true do -- event loop
+		msg, param = gem.readMessage();
+		if msg ~= false then
+			if(msg == "exit") then
+				break;
+			elseif(msg == "print") then
+				print (param);
+			elseif(msg == "save") then
+				print ("save, temp dir: "..param);
+				-- perform all onsave actions, editor is now blocked waiting for message
+				onSave(param);
+				-- gem.messageBox("got save","gemini");
+				gem.writeMessage("aftersave");
+			else
+				print ("unknown message: "..msg..'.'..param);
+			end
 		else
-			print ("unknown message: "..msg..'.'..param);
+			print ("got 0, disconnecting");
+			break;
 		end
-	else
-		print ("got 0, disconnecting");
-		break;
 	end
 end
+
+function onSave (tmpdir)
+	-- gem.messageBox("got save, tmpdir "..tmpdir,"gemini");
+	gem.messageBox("onSave","gemini");
+	print ("scriptalter: ".. gem.shellOpen("scriptalter.exe", tmpdir.."\\MapScript.galaxy"));
+	gem.messageBox("after alter","gemini");
+end
+
+main();

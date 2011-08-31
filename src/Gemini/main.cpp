@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
+#include <shellapi.h>
 
 #include "resource.h"
 #include <string>
@@ -84,6 +85,17 @@ int lua_messagebox(lua_State *l)
 	const char *title = lua_tostring(l,2);
 	MessageBoxA(NULL,msg,title,MB_OK);
 	return 1;
+}
+
+int lua_shellOpen(lua_State *l)
+{
+    const char *path = lua_tostring(l,1);
+	const char *params = lua_tostring(l,2);
+
+    int iReturn = (int) ShellExecuteA(NULL, "open", path, params, NULL, SW_SHOWNORMAL);
+
+    lua_pushinteger(l, iReturn);
+    return 1;
 }
 
 int xargc;
@@ -210,6 +222,7 @@ void initluastate(lua_State *lua)
 	lua_registert(lua,"readData",lua_readData);
 	lua_registert(lua,"readMessage",lua_readMessage);
 	lua_registert(lua,"errorExit",lua_errorExit);
+	lua_registert(lua,"shellOpen",lua_shellOpen);
 	lua_registert(lua,"startExe",lua_startexe);
 	lua_registert(lua,"freeProcHandle",lua_freeProcHandle);
 	lua_registert(lua,"injectDll",lua_injectDll);

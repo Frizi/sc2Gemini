@@ -5,8 +5,9 @@
 1189868558 d:\codeblocks\gemini\src\gemini\resource.h
 	<windows.h>
 
-1314816208 source:d:\codeblocks\gemini\src\gemini\main.cpp
+1314825941 source:d:\codeblocks\gemini\src\gemini\main.cpp
 	<windows.h>
+	<shellapi.h>
 	"resource.h"
 	<string>
 	<sstream>
