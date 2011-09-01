@@ -1,12 +1,12 @@
 client specific:
-ctor messagerClient( string name, string servername );
+ctor messengerClient( string name, string servername );
 
 void registerEvent ( string event );
 void pushEvent ( string event );
 syncWaitForEvent( string event );
 
 server specific:
-ctor messagerServer( string name );
+ctor messengerServer( string name );
 void broadcastEvent( string event);
 void pushEvent ( string event, string destName );
 
