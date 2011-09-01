@@ -33,6 +33,7 @@ HWND __stdcall CreateWindowExAWrap(DWORD dwExStyle,LPCSTR lpClassName,LPCSTR lpW
 }
 */
 
+/*
 bool redirectRead = false;
 char globalMsg[maxMessageLen];
 
@@ -44,6 +45,7 @@ LPSECURITY_ATTRIBUTES tempSec;
 DWORD tempDisp;
 DWORD tempFlags;
 HANDLE tempTemplatef;
+*/
 
 HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY_ATTRIBUTES sec, DWORD disp, DWORD flags, HANDLE templatef)
 {
@@ -53,7 +55,7 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
     char filename[maxMessageLen];
     char msg[maxMessageLen];
 
-    bool triggered = false;
+    //bool triggered = false;
 
     WideCharToMultiByte(CP_ACP,0,fn,-1,filename,maxMessageLen,NULL,NULL);
     filename[maxMessageLen-1]=0; // anti overflow
@@ -68,14 +70,14 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
     client.Write(msg,maxMessageLen);
     //*/
 
-    if(!(access & GENERIC_WRITE)) // if we cannot write, it isnt that file handle what we need
+    if((!(access & GENERIC_WRITE)) && (access & GENERIC_READ)) // this handle should have only read permissions
     {
         // buffer for message output
         // store filename in buffer as ANSI
 
         const size_t strEnd = strlen(filename);
         // pattern of last accessed file for save before .SC2Map packing
-        const char* pattern = ".SC2Map.temp\\MapScript.galaxy";
+        const char* pattern = ".SC2Map.temp\\ComponentList.SC2Components";
         //const char* pattern = ".SC2Map.temp\\";
         const size_t patternLen = strlen(pattern);
 
@@ -86,8 +88,8 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
         // match substring
         //if((strstr(filename, pattern) != NULL))
         {
-            triggered = true;
-            redirectRead = true;
+            //triggered = true;
+            //redirectRead = true;
             // this is save
             // find temp directory with unpacked map data
             const char* pattern = ".SC2Map.temp\\";
@@ -97,16 +99,26 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
             unsigned int foundPos = found-filename;
             filename[foundPos + patternLen-1] = 0; // terminate string just before slash
 
-            strcpy(globalMsg, "msg.save.");
-            strcat(globalMsg, filename);
-            globalMsg[maxMessageLen-1] = 0; // anti overflow
+            strcpy(msg, "msg.save.");
+            strcat(msg, filename);
+            msg[maxMessageLen-1] = 0; // anti overflow
+            client.Write(msg,maxMessageLen);
 
+            // wait for message from external process
+            char msg[maxMessageLen];
+            strcpy(msg, "msg.aftersave");
+            char buf[maxMessageLen];
+            do
+            {
+                client.Read(buf,maxMessageLen);
+            } while(strcmp(buf,msg));
         }
     }
     // finally, execute original funcion
     HANDLE h = CreateFileW(fn,access,share,sec,disp,flags,templatef);
 
     // and save temps if triggered
+    /*
     if(triggered)
     {
         tempFileHandle = h;
@@ -118,10 +130,12 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
         tempFlags = flags;
         tempTemplatef = templatef;
     }
+    */
 
 	return h;
 }
 
+/*
 BOOL WINAPI ReadFileWrap(HANDLE hFile,LPVOID lpBuffer,DWORD nNumberOfBytesToRead,LPDWORD lpNumberOfBytesRead,LPOVERLAPPED lpOverlapped)
 {
     if(redirectRead)
@@ -146,7 +160,7 @@ BOOL WINAPI ReadFileWrap(HANDLE hFile,LPVOID lpBuffer,DWORD nNumberOfBytesToRead
     }
     return ReadFile(hFile,lpBuffer,nNumberOfBytesToRead,lpNumberOfBytesRead,lpOverlapped);
 }
-
+*/
 
 extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -171,8 +185,8 @@ extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvRese
 			//	throw("Could not redirect CreateDirectoryW");
 			if (!iat.RedirectImport("CreateFileW",(void *)CreateFileWWrap))
 				throw("Could not redirect CreateFileW");
-			if (!iat.RedirectImport("ReadFile",(void *)ReadFileWrap))
-				throw("Could not redirect ReadFile");
+			//if (!iat.RedirectImport("ReadFile",(void *)ReadFileWrap))
+			//	throw("Could not redirect ReadFile");
 
             //if (!iat.LocateForModule("storm.dll"))
 			//	throw("Could not locate storm.dll");

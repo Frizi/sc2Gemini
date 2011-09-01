@@ -22,7 +22,21 @@ int main(int argc, char* argv[])
     scriptFile.open(input);
     if (scriptFile.is_open())
     {
-        while ( scriptFile.good() )
+        if(scriptFile.good())
+        {
+            getline(scriptFile,line);
+            if(line.find("// Gemini injected") != string::npos)
+            {
+                scriptFile.close();
+                return 0;
+            }
+            else
+            {
+                buffer << "// Gemini injected" << endl;
+                buffer << line << endl;
+            }
+        }
+        while ( scriptFile.good())
         {
             getline(scriptFile,line);
             buffer << line << endl;
@@ -31,7 +45,7 @@ int main(int argc, char* argv[])
                 buffer <<
                 "// Gemini" << endl <<
                 "bool gtGeminiTest(bool testConds, bool runActions){" << endl <<
-                "    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, \"Gemini injection successful\");" << endl <<
+                "    UIDisplayMessage(PlayerGroupAll(), c_messageAreaSubtitle, StringToText(\"Gemini injection successful\"));" << endl <<
                 "    return true;" << endl <<
                 "}" << endl <<
                 "void gtGeminiTestInit(){" << endl <<

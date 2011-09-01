@@ -35,9 +35,9 @@ end
 
 function onSave (tmpdir)
 	-- gem.messageBox("got save, tmpdir "..tmpdir,"gemini");
-	gem.messageBox("onSave","gemini");
-	print ("scriptalter: ".. gem.shellOpen("scriptalter.exe", tmpdir.."\\MapScript.galaxy"));
-	gem.messageBox("after alter","gemini");
+	-- gem.messageBox("onSave","gemini");
+	print ("scriptalter: ".. gem.shellOpen("bin\\scriptalter.exe", tmpdir.."\\MapScript.galaxy"));
+	-- gem.messageBox("after alter","gemini");
 end
 
 main();
