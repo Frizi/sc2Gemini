@@ -1,4 +1,4 @@
-print "Gemini 0.1"
+print "Gemini 0.2"
 
 key = "HKEY_CURRENT_USER\\Software\\Blizzard Entertainment\\StarCraft II Editor\\Gemini"
 relExePath = "\\Support\\SC2Editor.exe";
