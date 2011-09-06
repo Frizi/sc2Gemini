@@ -2,20 +2,23 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#inlude <string>
-#inlude <vector.h>
-#inlude <queue.h>
+#include <string>
+#include <vector>
+#include <queue>
 
 typedef enum {
     T_INT,
     T_CSTR,
     T_CSTRL,
     T_FLOAT
-} paramType
+} ParamType;
 
-class EventMessage{
+class EventMessage {
 public:
     EventMessage( const char* eventType );
+    ~EventMessage();
+    const char* getEventType();
+
     void pushParam( const int param );
     void pushParam( const char* param );
     void pushParam( const char*, const int length );
@@ -26,18 +29,18 @@ public:
     char*  getParamCstr(int which);
     char*  getParamCstrL(int which, int &length);
     float  getParamFloat(int which);
-    void*  getParamAny(int which, paramType &type, int &length);
+    void*  getParamAny(int which, ParamType &type, int &length);
 
 private:
     char* event;
     std::vector<void*> parameters;
-    std::vector<paramType> parameterTypes;
-}
+    std::vector<ParamType> parameterTypes;
+};
 
-class messangerClient {
+class MessangerClient {
 public:
-	messangerClient( std::string name, std::string servername );
-	~messangerClient();
+	MessangerClient( std::string name, std::string servername );
+	~MessangerClient();
 	void pushEvent( std::string event );
 	void registerEvent( std::string event );
 	void syncWaitForEvent( std::string event );
@@ -48,13 +51,13 @@ private:
     std::queue<EventMessage> events;
 };
 
-class messangerServer {
+class MessangerServer {
 public:
-	messengerServer( std::string name );
-	~messengerServer();
-	acceptClient( std::string name );
-	void pushEvent ( string event, string destName );
-	void broadcastEvent( string event);
+	MessangerServer( std::string name );
+	~MessangerServer();
+	//void acceptClient( std::string name );
+	void pushEvent ( std::string event, std::string destName );
+	void broadcastEvent( std::string event );
 
 	bool peekEvent( std::string* event );
 private:
