@@ -25,11 +25,11 @@ public:
     void pushParam( const float param );
 
     int    paramCount();
-	int    getParamInt(int which);
-    char*  getParamCstr(int which);
-    char*  getParamCstrL(int which, int &length);
-    float  getParamFloat(int which);
-    void*  getParamAny(int which, ParamType &type, int &length);
+	int    getParamInt(unsigned int which);
+    const char*  getParamCstr(unsigned int which);
+    const char*  getParamCstrL(unsigned int which, int *length);
+    float  getParamFloat(unsigned int which);
+    void*  getParamAny(unsigned int which, ParamType &type, int *length);
 
 private:
     char* event;
