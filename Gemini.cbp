@@ -52,6 +52,8 @@
 		<Unit filename="src\Gemini\resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
+		<Unit filename="src\ipsmes.cpp" />
+		<Unit filename="src\ipsmes.h" />
 		<Unit filename="src\pipe.cpp" />
 		<Unit filename="src\pipe.h" />
 		<Extensions>
