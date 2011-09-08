@@ -8,32 +8,37 @@
 
 typedef enum {
     T_INT,
-    T_CSTR,
-    T_CSTRL,
-    T_FLOAT
+    T_STR,
+    T_FLOAT,
+    T_END // for header end
 } ParamType;
+
+typedef union {
+    int integer;
+    float floating;
+    std::string* string;
+} ParamValue;
 
 class EventMessage {
 public:
     EventMessage( const char* eventType );
     ~EventMessage();
-    const char* getEventType();
+    const std::string getEventType();
 
     void pushParam( const int param );
-    void pushParam( const char* param );
-    void pushParam( const char*, const int length );
+    void pushParam( const std::string param );
+    void pushParam( const std::string, const int length );
     void pushParam( const float param );
 
-    int    paramCount();
-	int    getParamInt(unsigned int which);
-    const char*  getParamCstr(unsigned int which);
-    const char*  getParamCstrL(unsigned int which, int *length);
-    float  getParamFloat(unsigned int which);
-    void*  getParamAny(unsigned int which, ParamType &type, int *length);
+    int         paramCount();
+    ParamType   getParameterType(unsigned int which);
+	int         getParamInt(unsigned int which);
+    std::string getParamString(unsigned int which);
+    float       getParamFloat(unsigned int which);
 
 private:
     char* event;
-    std::vector<void*> parameters;
+    std::vector<ParamValue> parameters;
     std::vector<ParamType> parameterTypes;
 };
 
