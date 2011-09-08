@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <streambuf>
 #include <queue>
 
 typedef enum {
@@ -21,9 +22,13 @@ typedef union {
 
 class EventMessage {
 public:
-    EventMessage( const char* eventType );
+    EventMessage( std::string eventType );
     ~EventMessage();
-    const std::string getEventType();
+    void clear();
+    void serialize(std::streambuf &sb);
+    void deserialize(std::streambuf &sb);
+
+    std::string getEventType();
 
     void pushParam( const int param );
     void pushParam( const std::string param );
@@ -37,7 +42,7 @@ public:
     float       getParamFloat(unsigned int which);
 
 private:
-    char* event;
+    std::string event;
     std::vector<ParamValue> parameters;
     std::vector<ParamType> parameterTypes;
 };

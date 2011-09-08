@@ -76,13 +76,15 @@
 
 1314729539 d:\codeblocks\gemini\src\pipe.h
 
-1315487120 source:d:\codeblocks\gemini\src\ipsmes.cpp
+1315497748 source:d:\codeblocks\gemini\src\ipsmes.cpp
 	"ipsmes.h"
+	<iostream>
 	<assert.h>
 	<windows.h>
 
-1315487763 d:\codeblocks\gemini\src\ipsmes.h
+1315495323 d:\codeblocks\gemini\src\ipsmes.h
 	<string>
 	<vector>
+	<streambuf>
 	<queue>
 
