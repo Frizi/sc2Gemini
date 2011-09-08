@@ -1,4 +1,4 @@
-// Interprocess Messanger client and server api
+// Interprocess Messenger client and server api
 #ifndef __IPSMES_H__
 #define __IPSMES_H__
 
@@ -32,7 +32,7 @@ public:
 
     int         paramCount();
     ParamType   getParameterType(unsigned int which);
-	int         getParamInt(unsigned int which);
+    int         getParamInt(unsigned int which);
     std::string getParamString(unsigned int which);
     float       getParamFloat(unsigned int which);
 
@@ -44,13 +44,13 @@ private:
 
 class MessengerClient {
 public:
-	MessengerClient( std::string name, std::string servername );
-	~MessengerClient();
-	void pushEvent( std::string event );
-	void registerEvent( std::string event );
-	void syncWaitForEvent( std::string event );
+    MessengerClient( std::string name, std::string servername );
+    ~MessengerClient();
+    void pushEvent( std::string event );
+    void registerEvent( std::string event );
+    void syncWaitForEvent( std::string event );
 
-	bool peekEvent( std::string* event );
+    bool peekEvent( std::string* event );
 
 private:
     std::queue<EventMessage> events;
@@ -58,13 +58,13 @@ private:
 
 class MessengerServer {
 public:
-	MessengerServer( std::string name );
-	~MessengerServer();
-	//void acceptClient( std::string name );
-	void pushEvent ( std::string event, std::string destName );
-	void broadcastEvent( std::string event );
+    MessengerServer( std::string name );
+    ~MessengerServer();
+    //void acceptClient( std::string name );
+    void pushEvent ( std::string event, std::string destName );
+    void broadcastEvent( std::string event );
 
-	bool peekEvent( std::string* event );
+    bool peekEvent( std::string* event );
 private:
     std::queue<EventMessage> events;
 };
