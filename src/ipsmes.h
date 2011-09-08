@@ -1,6 +1,6 @@
 // Interprocess Messanger client and server api
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#ifndef __IPSMES_H__
+#define __IPSMES_H__
 
 #include <string>
 #include <vector>
@@ -42,10 +42,10 @@ private:
     std::vector<ParamType> parameterTypes;
 };
 
-class MessangerClient {
+class MessengerClient {
 public:
-	MessangerClient( std::string name, std::string servername );
-	~MessangerClient();
+	MessengerClient( std::string name, std::string servername );
+	~MessengerClient();
 	void pushEvent( std::string event );
 	void registerEvent( std::string event );
 	void syncWaitForEvent( std::string event );
@@ -56,10 +56,10 @@ private:
     std::queue<EventMessage> events;
 };
 
-class MessangerServer {
+class MessengerServer {
 public:
-	MessangerServer( std::string name );
-	~MessangerServer();
+	MessengerServer( std::string name );
+	~MessengerServer();
 	//void acceptClient( std::string name );
 	void pushEvent ( std::string event, std::string destName );
 	void broadcastEvent( std::string event );
@@ -69,4 +69,4 @@ private:
     std::queue<EventMessage> events;
 };
 
-#endif // __MAIN_H__
+#endif // __IPSMES_H__
