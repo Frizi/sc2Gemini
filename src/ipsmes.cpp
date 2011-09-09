@@ -7,6 +7,10 @@
 // we would use pipes
 #include <windows.h>
 
+EventMessage::EventMessage()
+{
+    this->event = "";
+}
 EventMessage::EventMessage(std::string event)
 {
     this->event = event;
@@ -34,8 +38,8 @@ void EventMessage::clear()
         if(type == T_STR)
             delete param.string;
     }
-    // ParamType vector not empty after freeing
-    assert(parameterTypes.empty());
+    // ParamType vector may not be empty after freeing, because of exceptions
+    parameterTypes.clear();
 }
 
 void EventMessage::serialize(std::streambuf &sb)
@@ -43,12 +47,16 @@ void EventMessage::serialize(std::streambuf &sb)
     assert(parameters.size() == parameterTypes.size());
     std::ostream out(&sb);
 
-    for(unsigned int i; i<parameters.size();i++)
+    size_t size = event.size();
+    out.write((char*)&size, sizeof(size_t));
+    out.write(event.data(), size);
+
+    for(unsigned int i=0; i<parameters.size();i++)
     {
         ParamType type = parameterTypes[i];
-        out << (int)type;
+        out.put(static_cast<char>(type));
     }
-    out << T_END;
+    out.put(static_cast<char>(T_END));
     for(unsigned int i=0; i<parameters.size();i++)
     {
         ParamValue param = parameters[i];
@@ -56,14 +64,15 @@ void EventMessage::serialize(std::streambuf &sb)
         switch(type)
         {
             case T_STR:
-                out << param.string->size();
-                out << param.string->data();
+                size = param.string->size();
+                out.write((char*)&size, sizeof(size_t));
+                out.write(param.string->data(), size);
                 break;
             case T_INT:
-                out << param.integer;
+                out.write(reinterpret_cast<char*>(&(param.integer)), sizeof(int));
                 break;
             case T_FLOAT:
-                out << param.floating;
+                out.write(reinterpret_cast<char*>(&(param.floating)), sizeof(float));
                 break;
             default:
                 assert(false);
@@ -76,13 +85,20 @@ void EventMessage::deserialize(std::streambuf &sb)
     this->clear();
     std::istream in(&sb);
 
-    int type;
 
-    in >> type;
-    while(type != T_END)
+    size_t size = 0;
+    in.read((char*)&size, sizeof(size_t));
+
+    char* data = new char[size];
+    in.read(data,size);
+    event.assign(data,size);
+    delete[] data;
+    data = 0;
+
+    char type = 0;
+    while(in.get(type) && type != T_END)
     {
         parameterTypes.push_back(static_cast<ParamType>(type));
-        in >> type;
     }
 
     for(unsigned int i=0; i<parameterTypes.size();i++)
@@ -93,20 +109,20 @@ void EventMessage::deserialize(std::streambuf &sb)
         {
             case T_STR:
                 {
-                    unsigned int size;
-                    in >> size;
-                    char data[size];
+                    in.read((char*)&size, sizeof(size_t));
+                    char* data = new char[size];
                     in.read(data,size);
                     std::string* str = new std::string();
                     str->assign(data,size);
                     param.string = str;
+                    delete[] data;
                 }
                 break;
             case T_INT:
-                in >> param.integer;
+                in.read(reinterpret_cast<char*>(&(param.integer)), sizeof(int));
                 break;
             case T_FLOAT:
-                in >> param.floating;
+                in.read(reinterpret_cast<char*>(&(param.floating)), sizeof(float));
                 break;
             default:
                 throw("EventMessage: Wrong parameter type in deserialization");
@@ -184,7 +200,7 @@ float EventMessage::getParamFloat(const unsigned int which)
 {
     if(parameters.size() <= which)
         throw("EventMessage: Attempt to access nonexistent parameter");
-    if(parameterTypes[which] != T_INT)
+    if(parameterTypes[which] != T_FLOAT)
         throw("EventMessage: Attempt to retrieve parameter with wrong type");
 
     return parameters[which].floating;

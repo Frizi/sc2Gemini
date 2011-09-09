@@ -22,6 +22,7 @@ typedef union {
 
 class EventMessage {
 public:
+    EventMessage();
     EventMessage( std::string eventType );
     ~EventMessage();
     void clear();
@@ -65,7 +66,7 @@ class MessengerServer {
 public:
     MessengerServer( std::string name );
     ~MessengerServer();
-    //void acceptClient( std::string name );
+
     void pushEvent ( std::string event, std::string destName );
     void broadcastEvent( std::string event );
 
