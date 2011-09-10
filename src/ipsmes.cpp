@@ -16,6 +16,11 @@ EventMessage::EventMessage(std::string event)
     this->event = event;
 }
 
+EventMessage::EventMessage(std::streambuf &sb)
+{
+    this->serialize(sb);
+}
+
 EventMessage::~EventMessage()
 {
     this->clear();
@@ -68,6 +73,11 @@ void EventMessage::serialize(std::streambuf &sb)
                 out.write((char*)&size, sizeof(size_t));
                 out.write(param.string->data(), size);
                 break;
+            case T_WSTR:
+                size = param.wstring->size();
+                out.write((char*)&size, sizeof(size_t));
+                out.write(reinterpret_cast<const char*>(param.wstring->data()), size*sizeof(wchar_t));
+                break;
             case T_INT:
                 out.write(reinterpret_cast<char*>(&(param.integer)), sizeof(int));
                 break;
@@ -118,6 +128,17 @@ void EventMessage::deserialize(std::streambuf &sb)
                     delete[] data;
                 }
                 break;
+            case T_WSTR:
+                {
+                    in.read((char*)&size, sizeof(size_t));
+                    char* data = new char[size*sizeof(wchar_t)];
+                    in.read(data,size*sizeof(wchar_t));
+                    std::wstring* wstr = new std::wstring();
+                    wstr->assign(reinterpret_cast<wchar_t*>(data),size);
+                    param.wstring = wstr;
+                    delete[] data;
+                }
+                break;
             case T_INT:
                 in.read(reinterpret_cast<char*>(&(param.integer)), sizeof(int));
                 break;
@@ -161,6 +182,15 @@ void EventMessage::pushParam( const std::string param )
     parameterTypes.push_back(T_STR);
 }
 
+void EventMessage::pushParam( const std::wstring param )
+{
+    std::wstring* paramPtr = new std::wstring(param);
+    ParamValue val;
+    val.wstring = paramPtr;
+    parameters.push_back(val);
+    parameterTypes.push_back(T_WSTR);
+}
+
 void EventMessage::pushParam( const float param )
 {
     ParamValue val;
@@ -194,6 +224,16 @@ std::string  EventMessage::getParamString(const unsigned int which)
         throw("EventMessage: Attempt to retrieve parameter with wrong type");
 
     return *(parameters[which].string);
+}
+
+std::wstring  EventMessage::getParamWstring(const unsigned int which)
+{
+    if(parameters.size() <= which)
+        throw("EventMessage: Attempt to access nonexistent parameter");
+    if(parameterTypes[which] != T_WSTR)
+        throw("EventMessage: Attempt to retrieve parameter with wrong type");
+
+    return *(parameters[which].wstring);
 }
 
 float EventMessage::getParamFloat(const unsigned int which)

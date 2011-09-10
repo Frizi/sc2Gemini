@@ -31,8 +31,15 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add directory="unittest\include" />
 		</Compiler>
-		<Unit filename="main.cpp" />
+		<Linker>
+			<Add option="-lUnitTest" />
+			<Add directory="unittest\lib" />
+		</Linker>
+		<Unit filename="src\GeminiTest\main.cpp" />
+		<Unit filename="src\ipsmes.cpp" />
+		<Unit filename="src\ipsmes.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

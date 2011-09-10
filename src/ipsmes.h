@@ -9,8 +9,9 @@
 
 typedef enum {
     T_INT,
-    T_STR,
     T_FLOAT,
+    T_STR,
+    T_WSTR,
     T_END // for header end
 } ParamType;
 
@@ -18,12 +19,19 @@ typedef union {
     int integer;
     float floating;
     std::string* string;
+    std::wstring* wstring;
 } ParamValue;
+
+/* EventMessage didn't have any extra features
+ * like endianess correction or similar.
+ * It will be used on the same machine.
+ */
 
 class EventMessage {
 public:
     EventMessage();
     EventMessage( std::string eventType );
+    EventMessage( std::streambuf &sb ); // shorthand to serialize
     ~EventMessage();
     void clear();
     void serialize(std::streambuf &sb);
@@ -33,14 +41,15 @@ public:
 
     void pushParam( const int param );
     void pushParam( const std::string param );
-    void pushParam( const std::string, const int length );
+    void pushParam( const std::wstring param );
     void pushParam( const float param );
 
-    int         paramCount();
-    ParamType   getParameterType(unsigned int which);
-    int         getParamInt(unsigned int which);
-    std::string getParamString(unsigned int which);
-    float       getParamFloat(unsigned int which);
+    int          paramCount();
+    ParamType    getParameterType(unsigned int which);
+    int          getParamInt(unsigned int which);
+    std::string  getParamString(unsigned int which);
+    std::wstring getParamWstring(unsigned int which);
+    float        getParamFloat(unsigned int which);
 
 private:
     std::string event;
