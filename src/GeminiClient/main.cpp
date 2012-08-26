@@ -20,7 +20,6 @@ struct GlobalData_t {
     CsIpc::Client *clientRef;
     bool m_connected;
     geminiClientError lastError;
-    std::queue<CsIpc::EventMessage> localMsgQueue;
 };
 
 GlobalData_t globalData;
@@ -61,18 +60,10 @@ bool DLL_EXPORT GEM_Peek(CsIpc::EventMessage &msg)
 {
     HANDLE_NOT_CONNECTED;
 
-    if(globalData.localMsgQueue.empty())
+    if(!globalData.clientRef->Peek(msg))
     {
-        if(!globalData.clientRef->Peek(msg))
-        {
-            globalData.lastError = e_no_pending_events;
-            return false;
-        }
-    }
-    else
-    {
-        msg = globalData.localMsgQueue.front();
-        globalData.localMsgQueue.pop();
+        globalData.lastError = e_no_pending_events;
+        return false;
     }
 
     globalData.lastError = e_no_error;
@@ -83,54 +74,7 @@ bool DLL_EXPORT GEM_WaitForEvent(std::string eventType, CsIpc::EventMessage &msg
 {
     HANDLE_NOT_CONNECTED;
 
-    // first, search local queue for event
-    bool found = false;
-    if(!globalData.localMsgQueue.empty())
-    {
-        size_t size = globalData.localMsgQueue.size();
-        CsIpc::EventMessage tmpmsg;
-
-        // check each queue element,
-        // break with respect of msg order
-        for(unsigned int i = 0; i < size; i++)
-        {
-            tmpmsg = globalData.localMsgQueue.front();
-            globalData.localMsgQueue.pop();
-            if(!found && tmpmsg.getEventType() == eventType)
-            {
-                found = true;
-                msg = tmpmsg;
-            }
-            globalData.localMsgQueue.push(msg);
-        }
-    }
-
-    // when not found, wait for input
-    while (!found)
-    {
-        // get msg from input
-        while(!globalData.clientRef->Peek(msg))
-        {
-            // check for timeout
-
-            // prevent high CPU usage
-            Sleep(2);
-        }
-
-        // test msg
-        if(msg.getEventType() == eventType)
-        {
-            // stop waiting
-            found = true;
-            // skip sleep
-            break;
-        }
-        else
-        {
-            // add not matching event to local queue
-            globalData.localMsgQueue.push(msg);
-        }
-    }
+    globalData.clientRef->WaitForEvent(msg, eventType, timeout);
 
     globalData.lastError = e_no_error;
     return true;
