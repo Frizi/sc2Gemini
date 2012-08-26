@@ -1,0 +1,91 @@
+* ApiDll (TODO)
+ - a DLL that is used for EVERY connection to gemini (by external progs, by injected DLLs)
+ 
+bool ConnectAs(clientname);
+ |-> wrap for Client(clientname, FIXED_SERVER_NAME);
+ |-> public pipe handshake, private pipe connect
+ '-> sets m_connected true
+bool Send(EventMessage &msg); -> Client::Send wrap // overlapped, false on error
+ '-> checks for m_connected
+bool Peek(EventMessage &msg); -> Client::Peek wrap // returns false when no events or error
+ '-> checks for m_connected
+bool WaitForEvent(eventType, timeout); // false on error
+ |-> checks for m_connected
+ '-> every event recieved while waiting will stay in internal buffer
+bool RegisterEvent(eventType); // false on error
+ '-> checks for m_connected
+bool Disconnect(); // false on error
+ |-> sets m_connected false
+ '-> destructs Client (closes private pipe)
+int GetLastError();
+ enum  error {
+  e_no_error = 0,
+  e_not_connected, // critical, when connection not existing (on ConnectAs, means that gemini is not running)
+  e_no_pending_events,
+  e_timeout_reached,
+ };
+ 
+example:
+while( !done )
+{
+  while( Peek(&msg) )
+  {
+    // process evts
+  }
+  if( GetLastError() != e_no_pending_events)
+  {
+    // something bad happened
+    done = true;
+  }
+}
+ 
+ 
+* EventMessage features: (DONE)
+  - message type (string)
+  - sender name (string)
+  - multiple parrameters of multiple types
+     '-> overloaded pushParam( T param );
+  - serialization to streambuf (internal use)
+
+* Gemini's side of connection:
+Server is created;
+handshaking thread:
+  blocking threat that waits for incomming Connect (on public pipe)
+  when connect occurs, mutex is locked,
+  private pipe is created and added to the read pool
+Peek(&msg): // non-blocking
+  mutexes for event read
+  iterate through each pipe checking for message
+
+gemini pseudocode:
+int main(...)
+{
+  bool done = false;
+  HANDLE editorProc = startExe(L"SC2Editor.exe");
+  injectDll(editorProc, L"GeHack.exe");  
+  GeminiIpc::Server server(FIXED_SERVER_NAME);
+  // this creates separated thread for handshake
+
+  GeminiIpc::EventMessage msg; // memory placeholder for peek (we don't want to copy big struct)
+
+  while( !done )
+  {
+    while(server.Peek(&msg))
+    {
+      if(msg.type == "gemini.exit" && msg.sender == "GeHack")
+      {
+        done = true;
+        server.Broadcast(exitMsg);
+      }
+      if(msg.type == "gemini.inject")
+      {
+        injectDll(editorProc, msg.getParamWsting(0));
+        // injected library can do anything inside editor proc
+        // for example register itself as plugin for gemini (using ConnectAs from ApiDll)
+      }
+      // process other messages, broadcast them to registered clients
+    }
+    // do other stuff when needed
+  }
+  return 0;
+}

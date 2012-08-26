@@ -1,18 +1,6 @@
-client specific:
-ctor messengerClient( string name, string servername );
-
-void registerEvent ( string event );
-void pushEvent ( string event );
-syncWaitForEvent( string event );
-
-server specific:
-ctor messengerServer( string name );
-void broadcastEvent( string event);
-void pushEvent ( string event, string destName );
-
-both:
-string popParamString();
-int popParamInt();
-
-bool peekEvent( *string event );
-void pushParam ( string param );
+        (async peek)
+PUBLIC_FIFO ----> SERVER
+ ^                  | |
+ |-client <- priv <-' |
+ |    (sync or async) |
+ '-client <- priv <---'

@@ -1,7 +1,0 @@
-# depslib dependency file v1.0
-1314868750 source:d:\codeblocks\gemini\src\scriptalter\main.cpp
-	<iostream>
-	<fstream>
-	<sstream>
-	<string>
-

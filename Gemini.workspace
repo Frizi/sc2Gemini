@@ -4,6 +4,7 @@
 		<Project filename="GeHack.cbp" />
 		<Project filename="scriptalter.cbp" />
 		<Project filename="Gemini.cbp" />
-		<Project filename="GeminiTest.cbp" active="1" />
+		<Project filename="GeminiTest.cbp" />
+		<Project filename="GeminiClient.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

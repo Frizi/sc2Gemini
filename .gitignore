@@ -1,8 +1,9 @@
-/bin/*
-obj_*/*
-obj/*
+*.depend
 *.layout
 *~
 *.cbTemp
-*Thumbs.db
+Thumbs.db
 *.exe
+*.o
+*.a
+*.dll
