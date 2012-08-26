@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="GeminiTest" />
+		<Option title="findEditor" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\GeminiTest" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\findEditor" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -16,7 +16,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\GeminiTest" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\findEditor" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -31,16 +31,15 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
-			<Add directory="unittest\include" />
+			<Add option="-DUNICODE" />
+			<Add option="-D_UNICODE" />
 		</Compiler>
-		<Linker>
-			<Add option="-lUnitTest" />
-			<Add directory="unittest\lib" />
-		</Linker>
+		<Unit filename="src\findEditor\main.cpp" />
 		<Extensions>
 			<code_completion />
-			<debugger />
 			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
