@@ -1,321 +1,105 @@
-#define WIN32_LEAN_AND_MEAN
-
-#include <windows.h>
-#include <shellapi.h>
-
-#include "resource.h"
 #include <string>
-#include <sstream>
-#include <cstdio>
-#include <cstdlib>
-
-#include "luautil.h"
 #include "injections.h"
 
-#include "../pipe.h"
+#include <iostream>
+#include <boost/program_options.hpp>
+#include <boost/foreach.hpp>
+#include <boost/filesystem.hpp>
 
-PipeServer server("\\\\.\\pipe\\sc2gemini");
+#include <algorithm>
 
-void ErrorExit(const char* lpszFunction)
-{
-    // Retrieve the system error message for the last-error code
-    LPVOID lpMsgBuf;
-    std::stringstream displayBuf;
-    DWORD dw = GetLastError();
+namespace po = boost::program_options;
+namespace fs = boost::filesystem;
 
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        dw,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR) &lpMsgBuf,
-        0, NULL );
+std::vector<fs::path> libraries;
 
-    // Display the error message and exit the process
-    displayBuf << lpszFunction << " failed with error " << dw << ":" << std::endl << (char*)lpMsgBuf;
-    MessageBox(NULL, displayBuf.str().c_str(), "oh shi~", MB_OK);
-    LocalFree(lpMsgBuf);
-    ExitProcess(dw);
-}
+void addLibraries(const std::vector<std::string> &libs);
+void searchForLibraries(const std::vector<std::string> &directories);
 
-
-int lua_startexe(lua_State *l)
-{
-	const char *exefile = lua_tostring(l,1);
-	const char *exestring = lua_tostring(l,2);
-
-	char mod[strlen(exestring)];
-	strcpy(mod,exestring);
-	lua_pushinteger(l,(int)startexe(exefile,mod));
-
-	return 1;
-}
-
-int lua_injectDll(lua_State *l)
-{
-    PROCESS_INFORMATION* pi = (PROCESS_INFORMATION*) lua_tointeger(l,1);
-	const char *dllName = lua_tostring(l,2);
-	injectDll(pi, dllName);
-    return 1;
-}
-
-int lua_freeProcHandle(lua_State *l)
-{
-    PROCESS_INFORMATION* pi = (PROCESS_INFORMATION*) lua_tointeger(l,1);
-    CloseHandle( pi->hProcess );
-    CloseHandle( pi->hThread );
-    // handle with care :P
-    delete pi;
-    lua_pushinteger(l,0);
-    return 1;
-}
-
-int lua_errorExit(lua_State *l)
-{
-    const char *lpszFunction = lua_tostring(l,1);
-    ErrorExit(lpszFunction);
-    return 1;
-}
-
-int lua_messagebox(lua_State *l)
-{
-	const char *msg = lua_tostring(l,1);
-	const char *title = lua_tostring(l,2);
-	MessageBoxA(NULL,msg,title,MB_OK);
-	return 1;
-}
-
-int lua_shellOpen(lua_State *l)
-{
-    const char *path = lua_tostring(l,1);
-	const char *params = lua_tostring(l,2);
-
-    int iReturn = (int) ShellExecuteA(NULL, "open", path, params, NULL, SW_SHOWNORMAL);
-
-    lua_pushinteger(l, iReturn);
-    return 1;
-}
-
-int xargc;
-const char **xargv;
-char argbuf[8096];
-
-const char *getargs(void)
-{
-	std::stringstream s;
-	for(int i=1;i<xargc;i++) {
-		//dprintf("%d %s\n",i,xargv[i]);
-		if (strchr(xargv[i],' '))
-			s << "\"" << xargv[i] << "\" ";
-		else
-			s << xargv[i] << " ";
-	}
-	strcpy(argbuf, s.str().c_str());
-	return argbuf;
-}
-
-int lua_getargs(lua_State *l)
-{
-	lua_pushstring(l,getargs());
-	return 1;
-}
-
-int lua_connectServer(lua_State *l)
-{
-    static bool connected = false;
-    if(!connected)
-    {
-        try
-        {
-            if(!server.Connect())
-                throw("Failed to initialize pipe\n");
-            connected = true;
-        } catch(const char* err) {
-            fprintf(stderr,"Error: %s\n",err);
-            return -1;
-        }
-    }
-    return 1;
-}
-
-const unsigned int maxMessageLen = 4096;
-
-int lua_readMessage(lua_State *l)
-{
-    char buffer[maxMessageLen];
-    server.Read(buffer,maxMessageLen);
-    //size_t msgLen = wcslen((wchar_t*)(buffer+4))>>1;
-    if((!memcmp("msg.",buffer,4)) && buffer[4] != 0x00)
-    {
-        char* param = strstr(buffer+4,".");
-        if(param == NULL)
-        {
-            lua_pushstring(l,buffer+4);
-            lua_pushstring(l,"");
-        }
-        else
-        {
-            *param = 0; // replace dot with null. param is just buffer with offset.
-            lua_pushstring(l,buffer+4);
-            lua_pushstring(l,param+1);
-        }
-    }
-    else
-    {
-        lua_pushboolean(l,false);
-        lua_pushboolean(l,false);
-    }
-    return 2;
-}
-
-int lua_readData(lua_State *l)
-{
-    char buffer[maxMessageLen];
-    server.Read(buffer,maxMessageLen);
-    lua_pushstring(l,buffer);
-    return 1;
-}
-
-
-int lua_writeMessage(lua_State *l)
-{
-    char buffer[maxMessageLen];
-    memcpy(buffer, "msg.",4);
-
-    const char *message = lua_tostring(l,1);
-    const char *param = lua_tostring(l,2);
-
-    strcpy(buffer+4, message);
-
-    if(param != NULL)
-    {
-        strcat(buffer, ".");
-        strcat(buffer,param);
-    }
-    buffer[maxMessageLen-1] = 0; // anti overflow
-    server.Write(buffer,maxMessageLen);
-
-    return 1;
-}
-
-int lua_writeData(lua_State *l)
-{
-    char buffer[maxMessageLen];
-    const char *data = lua_tostring(l,1);
-    strcpy(buffer, data);
-    buffer[maxMessageLen-1] = 0;
-    server.Write(buffer,maxMessageLen);
-    return 1;
-}
-
-void initluastate(lua_State *lua)
-{
-	luaL_openlibs(lua);
-	lua_newtable(lua);
-
-    // must-have functions
-	lua_registert(lua,"connectServer",lua_connectServer);
-	lua_registert(lua,"writeData",lua_writeData);
-	lua_registert(lua,"writeMessage",lua_writeMessage);
-	lua_registert(lua,"readData",lua_readData);
-	lua_registert(lua,"readMessage",lua_readMessage);
-	lua_registert(lua,"errorExit",lua_errorExit);
-	lua_registert(lua,"shellOpen",lua_shellOpen);
-	lua_registert(lua,"startExe",lua_startexe);
-	lua_registert(lua,"freeProcHandle",lua_freeProcHandle);
-	lua_registert(lua,"injectDll",lua_injectDll);
-	lua_registert(lua,"sleep",lua_sleep);
-	lua_registert(lua,"messageBox",lua_messagebox);
-
-    // from grimoire, may be useful
-    lua_registert(lua,"browse",lua_browseforfolder);
-    lua_registert(lua,"getArgs",lua_getargs);
-    lua_registert(lua,"openLink",lua_openlink);
-	lua_registert(lua,"getCwd",lua_getcwd);
-	lua_registert(lua,"getRegPair",lua_regopenkey);
-	lua_registert(lua,"deleteRegPair",lua_regdeletekey);
-	lua_registert(lua,"setRegString",lua_regsetstring);
-	lua_registert(lua,"setRegDword",lua_regsetdword);
-	lua_registert(lua,"exists",lua_exists);
-	lua_registert(lua,"browseForFolder",lua_browseforfolder);
-	lua_registert(lua,"getModuleHandle",lua_getmodulehandle);
-	lua_registert(lua,"regKeyExists",lua_regKeyExists);
-
-    lua_setglobal(lua,"gem");
-}
-
-//Sends the next arg on the line back
-const char *getopt_arg(int &argc, const char **argv, const char *optname)
-{
-	for(int i=0;i<argc;i++) {
-		if(strcmp(optname,argv[i]) == 0) {
-			if (i+1 < argc) {
-				argc-=2;
-				const char *arg = argv[i+1];
-				for(int j=i;j<argc;j++) {
-					argv[j] = argv[j+2];
-					argv[j+2] = argv[j+3];
-
-				}
-				return arg;
-			}
-		}
-	}
-	return NULL;
-}
-
-const char *getscript(int &argc, const char **argv)
-{
-	static const char def[] = "script.lua";
-	const char *s = getopt_arg(argc,argv,"-s");
-	if(s == NULL) s = getopt_arg(argc,argv,"--script");
-	if(s == NULL) s = def;
-	return s;
-}
-
-void report_errors(lua_State *lua, int status)
-{
-	if ( status!=0 ) {
-		fprintf(stderr,"-- %s\n", lua_tostring(lua,-1));
-		lua_pop(lua, 1); // remove error message
-	}
-}
-
-int runscript(lua_State *lua, const char *scriptfile)
-{
-	int s = luaL_loadfile(lua,scriptfile);
-	if (s == 0) {
-		s = lua_pcall(lua,0,LUA_MULTRET,0);
-	}
-	report_errors(lua,s);
-	return lua_tointeger(lua, lua_gettop(lua));
-}
-
-//int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 int main(int argc, const char **argv)
 {
-    xargc = argc;
-    xargv = argv;
+    std::string application;
 
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help,h"   , "produce help message")
+        ("run,r"    , po::value<std::string>(&application)->required(), "specifies a path to executable that will be runned and exploited\n"
+                                                                        "   use '-' as arg for stdin")
+        ("library,l", po::value<std::vector<std::string> >()->notifier(&addLibraries), "load given .dll into executable on startup")
+        ("libdir,L" , po::value<std::vector<std::string> >()->notifier(&searchForLibraries), "load every found .dll inside given directory on startup")
+    ;
 
+    po::variables_map vm;
+    try
+    {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
 
-    const char *scriptfile = getscript(argc,argv);
+        if ( vm.count("help") )
+        {
+            std::cout << "Usage: " << argv[0] << " [options]" << std::endl
+            << desc << std::endl;
+            return 0;
+        }
+        po::notify(vm);
 
-    try {
+        if(application == "-")
+            std::getline(std::cin, application);
+    }
+    catch(po::error &e)
+    {
+        std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
+        std::cerr << desc << std::endl;
+        return 1;
+    }
 
-        lua_State *lua = lua_open();
-        initluastate(lua);
-        runscript(lua, scriptfile);
-        lua_close(lua);
-        server.Disconnect();
+    fs::path appPath = fs::path(application);
 
-    } catch(const char *err) {
-		//dprintf("Error: %s\n",err);
-		fprintf(stderr,"Error: %s\n",err);
-		return 1;
-	}
+    std::cout << "running " << appPath << std::endl;
+
+    PROCESS_INFORMATION* pi = startexe(appPath.wstring().c_str());
+    Sleep(2000);
+    BOOST_FOREACH(const fs::path & lib, libraries)
+    {
+        std::cout << "loading " << lib << std::endl;
+        injectDll(pi, lib.wstring().c_str());
+        Sleep(2);
+    }
+
     return 0;
 }
 
+void addLibraries(const std::vector<std::string> &libs)
+{
+    BOOST_FOREACH(const std::string & lib, libs)
+    {
+        libraries.push_back(absolute(fs::path(lib)));
+    }
+}
+
+void searchForLibraries(const std::vector<std::string> &directories)
+{
+    BOOST_FOREACH(const std::string & strPath, directories)
+    {
+        fs::path dir_path(strPath);
+        if(fs::is_directory(dir_path))
+        {
+            fs::directory_iterator end_itr;
+
+            for ( fs::directory_iterator itr( dir_path ); itr != end_itr;  ++itr )
+            {
+                if( !fs::is_directory(itr->path()) )
+                {
+                    std::string ext = itr->path().extension().string();
+                    // to lowercase
+                    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                    if(ext == ".dll")
+                        libraries.push_back(absolute(itr->path()));
+                }
+            }
+        }
+        else
+        {
+            throw po::error("specified libdir is not a directory");
+        }
+    }
+}

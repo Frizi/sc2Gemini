@@ -1,26 +1,29 @@
 #include "injections.h"
 
-#include <cstdio>
+#include <iostream>
 
-PROCESS_INFORMATION* startexe(const char *exefile,char *exestring)
+PROCESS_INFORMATION* startexe(const wchar_t *exefile)
 {
-	//printf("%s\t%s\n",exefile,exestring);
 	STARTUPINFO si;
 	ZeroMemory(&si,sizeof(si)); // Clean
 	si.cb = sizeof(si); // Set size
 	PROCESS_INFORMATION* pi = new PROCESS_INFORMATION(); // Info
 	ZeroMemory(pi,sizeof(pi)); // Clean
-	printf("starting %s %s\n",exefile,exestring);
-	CreateProcessA(exefile,exestring,NULL,NULL,false,0,NULL,NULL,&si,pi);
+
+#ifdef DEBUG
+	std::wcout << L"Starting " << exefile << std::endl;
+#endif
+
+	CreateProcess(exefile,NULL,NULL,NULL,false,0,NULL,NULL,&si,pi);
 	if(!(*pi).hProcess) {
-		printf("Could not start %s\n",exefile);
+        std::wcout << L"Could not start" << exefile << std::endl;
 		return pi;
 	}
 	//ResumeThread(pi.hThread);
 	return pi;
 }
 
-void injectDll(PROCESS_INFORMATION* pi, const char* dllName)
+void injectDll(PROCESS_INFORMATION* pi, const wchar_t* dllName)
 {
     try {
         const char loadDll[] = { // little endian x86 (_64)
@@ -28,8 +31,8 @@ void injectDll(PROCESS_INFORMATION* pi, const char* dllName)
             0x9C,                           // PUSHFD               ; save registers
             0x60,                           // PUSHAD               ;
             0x68, 0xEF, 0xBE, 0xAD, 0xDE,   // PUSH 0DEADBEFh       ; placeholder dllString
-            0xB8, 0xEF, 0xBE, 0xAD, 0xDE,   // MOV EAX, 0DEADBEEFh  ; placeholder addr_loadLibraryA
-            0xFF, 0xD0,                     // CALL EAX             ; loadLibraryA(&dllString);
+            0xB8, 0xEF, 0xBE, 0xAD, 0xDE,   // MOV EAX, 0DEADBEEFh  ; placeholder addr_loadLibrary
+            0xFF, 0xD0,                     // CALL EAX             ; loadLibrary(&dllString);
             0x61,                           // POPAD                ; restore registers
             0x9D,                           // POPFD                ;
             0xC3                            // RETN                 ; back to oldEip, continue process
@@ -38,10 +41,10 @@ void injectDll(PROCESS_INFORMATION* pi, const char* dllName)
 
         SuspendThread( pi->hThread );
 
-        void* dllString = VirtualAllocEx( pi->hProcess , NULL, (strlen(dllName) + 1), MEM_COMMIT, PAGE_READWRITE);
+        void* dllString = VirtualAllocEx( pi->hProcess , NULL, (wcslen(dllName) * sizeof(wchar_t) + 1), MEM_COMMIT, PAGE_READWRITE);
         void* stub      = VirtualAllocEx( pi->hProcess , NULL, stubLen, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
-        WriteProcessMemory( pi->hProcess , dllString, dllName, strlen(dllName), NULL);
+        WriteProcessMemory( pi->hProcess , dllString, dllName, wcslen(dllName) * sizeof(wchar_t) + 1, NULL);
 
         size_t oldIP;
         CONTEXT ctx;
@@ -51,18 +54,19 @@ void injectDll(PROCESS_INFORMATION* pi, const char* dllName)
         ctx.Eip = (DWORD)stub;
         ctx.ContextFlags = CONTEXT_CONTROL;
 
-        size_t addr_loadLibraryA = (unsigned long)GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
+        size_t addr_loadLibrary = (size_t) GetProcAddress(GetModuleHandle(L"kernel32.dll"), "LoadLibraryW");
         DWORD oldprot;
         VirtualProtect((void *)loadDll, stubLen, PAGE_EXECUTE_READWRITE, &oldprot);
         memcpy((void *)((size_t)loadDll + 1), &oldIP, 4);
         memcpy((void *)((size_t)loadDll + 8), &dllString, 4);
-        memcpy((void *)((size_t)loadDll + 13), &addr_loadLibraryA, 4);
+        memcpy((void *)((size_t)loadDll + 13), &addr_loadLibrary, 4);
 
         WriteProcessMemory( pi->hProcess, stub, (void *)((size_t)loadDll), stubLen, NULL);
         SetThreadContext( pi->hThread, &ctx);
         ResumeThread( pi->hThread );
     } catch(const char* err) {
-        fprintf(stderr,"Error while injecting %s: %s\n",dllName,err);
+        std::wcerr << "Error while injecting " << dllName << ": " << err;
         return;
     }
 }
+

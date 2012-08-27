@@ -28,9 +28,6 @@ int main()
 {
     bool done = false;
 
-
-
-
     // try to use saved path if exists
     if(exists(confFileName))
     {
