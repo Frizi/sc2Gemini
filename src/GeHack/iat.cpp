@@ -52,13 +52,8 @@ bool CIAT::LocateForModule(HMODULE hApiModule)
 
 	while(pImportDesc->FirstThunk)
 	{
-		/*
-		PSTR szImportModuleName = (PSTR)((ULONG_PTR)(m_hModule) + (ULONG_PTR)(pImportDesc->Name));
-		if (lstrcmpi(szImportModuleName, lpDllName) == 0)
-		if (GetModuleHandle(szImportModuleName) == hApiModule)
-			break;
-		*/
-		if (GetModuleHandle((PWSTR)((ULONG_PTR)(m_hModule) + (ULONG_PTR)(pImportDesc->Name))) == hApiModule)
+		// name stored as ANSI string, so need to use A version
+		if (GetModuleHandleA((PSTR)((ULONG_PTR)(m_hModule) + (ULONG_PTR)(pImportDesc->Name))) == hApiModule)
 			break;
 
 		pImportDesc++;
