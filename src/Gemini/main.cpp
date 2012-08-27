@@ -1,12 +1,14 @@
 #include <string>
-#include "injections.h"
-
 #include <iostream>
+#include <algorithm>
+
 #include <boost/program_options.hpp>
 #include <boost/foreach.hpp>
 #include <boost/filesystem.hpp>
 
-#include <algorithm>
+#include <csipc/Server.h>
+
+#include "injections.h"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -54,9 +56,13 @@ int main(int argc, const char **argv)
 
     fs::path appPath = fs::path(application);
 
+    std::cout << "starting server" << std::endl;
+    CsIpc::Server server("gemini");
+
     std::cout << "running " << appPath << std::endl;
 
     PROCESS_INFORMATION* pi = startexe(appPath.wstring().c_str());
+
     BOOST_FOREACH(const fs::path & lib, libraries)
     {
         std::cout << "loading " << lib << std::endl;

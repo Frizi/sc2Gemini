@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="Workspace">
-		<Project filename="GeHack.cbp" />
-		<Project filename="scriptalter.cbp" />
 		<Project filename="Gemini.cbp" />
+		<Project filename="scriptalter.cbp" />
+		<Project filename="GeHack.cbp" />
 		<Project filename="GeminiTest.cbp" />
 		<Project filename="GeminiClient.cbp" />
 		<Project filename="findEditor.cbp" />

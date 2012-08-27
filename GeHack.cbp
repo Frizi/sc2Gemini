@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\GeHack" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\plugins\GeHack" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj_dll\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
@@ -15,42 +15,53 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
-					<Add option="-DBUILD_DLL" />
 					<Add option="-g" />
+					<Add option="-DBUILD_DLL" />
 				</Compiler>
 				<Linker>
+					<Add option="-lcs-ipc-d" />
 					<Add library="user32" />
 				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\GeHack" prefix_auto="1" extension_auto="1" />
+				<Option output="bin\plugins\GeHack" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj_dll\" />
 				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
+					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-DBUILD_DLL" />
-					<Add option="-O2" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-lcs-ipc" />
 					<Add library="user32" />
 				</Linker>
 			</Target>
 		</Build>
+		<Compiler>
+			<Add option="-DUNICODE" />
+			<Add option="-D_UNICODE" />
+			<Add directory=".\cs-ipc\cs-ipc" />
+		</Compiler>
+		<Linker>
+			<Add option="-lGeminiClient.a" />
+			<Add directory=".\cs-ipc\cs-ipc\csipc" />
+			<Add directory="bin" />
+		</Linker>
 		<Unit filename="src\GeHack\iat.cpp" />
 		<Unit filename="src\GeHack\iat.h" />
 		<Unit filename="src\GeHack\main.cpp" />
 		<Unit filename="src\GeHack\main.h" />
-		<Unit filename="src\ipsmes.cpp" />
 		<Unit filename="src\ipsmes.h" />
-		<Unit filename="src\pipe.cpp" />
 		<Unit filename="src\pipe.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

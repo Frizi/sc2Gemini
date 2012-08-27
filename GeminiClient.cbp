@@ -52,8 +52,8 @@
 		<Linker>
 			<Add directory="cs-ipc\cs-ipc\csipc" />
 		</Linker>
-		<Unit filename="src\GeminiClient\main.cpp" />
-		<Unit filename="src\GeminiClient\main.h" />
+		<Unit filename="src\GeminiClient\GeminiClient.cpp" />
+		<Unit filename="src\GeminiClient\GeminiClient.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
