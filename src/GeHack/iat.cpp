@@ -1,9 +1,7 @@
-// this file is from grimoire source
-// see humans.txt for more info
-
-// CIAT.cpp: implementation of the CIAT class.
-// - Andy Scott aka xttocs
-//////////////////////////////////////////////////////////////////////
+// IAT patching class
+// by Andy Scott aka xttocs
+// modified
+///////////////////////////
 
 #include <windows.h>
 #include "iat.h"
