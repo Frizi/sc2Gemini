@@ -19,8 +19,8 @@ public:
 	CIAT();
 	virtual ~CIAT();
 	void SetParentModule(HMODULE hParent);
-	void SetParentModule(const char *ParentModuleName);
-	bool LocateForModule(const char *ApiModuleName);
+	void SetParentModule(const wchar_t *ParentModuleName);
+	bool LocateForModule(const wchar_t *ApiModuleName);
 	bool LocateForModule(HMODULE hApiModule);
 	bool RedirectImport(int ApiOrdinal, void *NewAddress);
 	bool RedirectImport(const char *Api, void *NewAddress);

@@ -4,13 +4,6 @@
 
 #include <sstream>
 
-#include "../pipe.h"
-
-// a sample exported function
-
-// todo: move additional pipe functions and constants to separated file
-PipeClient client("\\\\.\\pipe\\sc2gemini");
-const unsigned int maxMessageLen = 4096;
 
 /*
 HWND __stdcall CreateWindowExAWrap(DWORD dwExStyle,LPCSTR lpClassName,LPCSTR lpWindowName,DWORD dwStyle,int X,int Y,int nWidth,int nHeight,HWND hWndParent,HMENU hMenu,HINSTANCE hInstance,LPVOID lpParam)
@@ -47,18 +40,18 @@ DWORD tempFlags;
 HANDLE tempTemplatef;
 */
 
+/*
 HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY_ATTRIBUTES sec, DWORD disp, DWORD flags, HANDLE templatef)
 {
     // anything will be done before executing original CreateFileW
     // goal is to detect map save and send on message on next read
 
-    char filename[maxMessageLen];
-    char msg[maxMessageLen];
 
     //bool triggered = false;
 
-    WideCharToMultiByte(CP_ACP,0,fn,-1,filename,maxMessageLen,NULL,NULL);
-    filename[maxMessageLen-1]=0; // anti overflow
+    //WideCharToMultiByte(CP_ACP,0,fn,-1,filename,maxMessageLen,NULL,NULL);
+
+
 
     //* // debug filename output
     strcpy(msg, "msg.print.CreateFileW: ");
@@ -68,7 +61,7 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
     if(access & GENERIC_WRITE)
         strcat(msg, " w");
     client.Write(msg,maxMessageLen);
-    //*/
+
 
     if((!(access & GENERIC_WRITE)) && (access & GENERIC_READ)) // this handle should have only read permissions
     {
@@ -118,7 +111,7 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
     HANDLE h = CreateFileW(fn,access,share,sec,disp,flags,templatef);
 
     // and save temps if triggered
-    /*
+    //*
     if(triggered)
     {
         tempFileHandle = h;
@@ -130,11 +123,10 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY
         tempFlags = flags;
         tempTemplatef = templatef;
     }
-    */
 
 	return h;
 }
-
+*/
 /*
 BOOL WINAPI ReadFileWrap(HANDLE hFile,LPVOID lpBuffer,DWORD nNumberOfBytesToRead,LPDWORD lpNumberOfBytesRead,LPOVERLAPPED lpOverlapped)
 {
@@ -167,7 +159,9 @@ extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvRese
     if(fdwReason == DLL_PROCESS_ATTACH)
     {
         DisableThreadLibraryCalls(module);
+        MessageBox(NULL,L"GeHack injection successful",L"GeHack.dll",MB_ICONEXCLAMATION);
         try {
+            /*
             if(!client.Connect())
                 throw("Could not initialize client");
 
@@ -190,6 +184,7 @@ extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvRese
 
             //if (!iat.LocateForModule("storm.dll"))
 			//	throw("Could not locate storm.dll");
+			*/
 
         }   catch(const char *s) {
             MessageBoxA(NULL,s,"GeHack.dll",MB_ICONERROR);
@@ -198,9 +193,9 @@ extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvRese
     }
     else if(fdwReason == DLL_PROCESS_DETACH)
     {
-        const char* msg = "msg.exit";
-        client.Write(msg,strlen(msg)+1);
-        client.Disconnect();
+        //const char* msg = "msg.exit";
+        //client.Write(msg,strlen(msg)+1);
+        //client.Disconnect();
     }
     return TRUE;
 }

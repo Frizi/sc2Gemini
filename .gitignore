@@ -7,4 +7,5 @@ Thumbs.db
 *.o
 *.a
 *.dll
+*.def
 .editorpath

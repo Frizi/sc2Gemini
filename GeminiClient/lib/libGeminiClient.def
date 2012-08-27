@@ -1,9 +1,0 @@
-EXPORTS
-    GEM_ConnectAs @1
-    GEM_Disconnect @2
-    GEM_GetLastError @3
-    GEM_Peek @4
-    GEM_RegisterEvent @5
-    GEM_Send @6
-    GEM_UnregisterEvent @7
-    GEM_WaitForEvent @8

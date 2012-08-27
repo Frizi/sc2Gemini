@@ -22,12 +22,12 @@ void CIAT::SetParentModule(HMODULE hParent)
 	m_hModule = hParent;
 }
 
-void CIAT::SetParentModule(const char *ParentModuleName)
+void CIAT::SetParentModule(const wchar_t *ParentModuleName)
 {
 	m_hModule = GetModuleHandle(ParentModuleName);
 }
 
-bool CIAT::LocateForModule(const char *ApiModuleName)
+bool CIAT::LocateForModule(const wchar_t *ApiModuleName)
 {
 	return LocateForModule(GetModuleHandle(ApiModuleName));
 }
@@ -58,7 +58,7 @@ bool CIAT::LocateForModule(HMODULE hApiModule)
 		if (GetModuleHandle(szImportModuleName) == hApiModule)
 			break;
 		*/
-		if (GetModuleHandle((PSTR)((ULONG_PTR)(m_hModule) + (ULONG_PTR)(pImportDesc->Name))) == hApiModule)
+		if (GetModuleHandle((PWSTR)((ULONG_PTR)(m_hModule) + (ULONG_PTR)(pImportDesc->Name))) == hApiModule)
 			break;
 
 		pImportDesc++;

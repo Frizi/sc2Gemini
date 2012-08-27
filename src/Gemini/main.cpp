@@ -57,12 +57,12 @@ int main(int argc, const char **argv)
     std::cout << "running " << appPath << std::endl;
 
     PROCESS_INFORMATION* pi = startexe(appPath.wstring().c_str());
-    Sleep(2000);
+    //Sleep(2000);
     BOOST_FOREACH(const fs::path & lib, libraries)
     {
         std::cout << "loading " << lib << std::endl;
         injectDll(pi, lib.wstring().c_str());
-        Sleep(2);
+        //Sleep(2);
     }
 
     return 0;

@@ -23,6 +23,33 @@ PROCESS_INFORMATION* startexe(const wchar_t *exefile)
 	return pi;
 }
 
+//*
+void injectDll(PROCESS_INFORMATION* pi, const wchar_t* dllName)
+{
+    try {
+        const size_t stringBufLen = wcslen(dllName) * sizeof(wchar_t) + 1;
+
+        void* addr_dllString = VirtualAllocEx( pi->hProcess , NULL, stringBufLen, MEM_COMMIT, PAGE_READWRITE);
+        WriteProcessMemory( pi->hProcess , addr_dllString, dllName, stringBufLen, NULL);
+        size_t addr_loadLibrary = (size_t) GetProcAddress(GetModuleHandle(L"kernel32.dll"), "LoadLibraryW");
+
+        HANDLE hThread;
+        DWORD hLibModule;
+
+        hThread = CreateRemoteThread(pi->hProcess, NULL, 0,
+                                     (LPTHREAD_START_ROUTINE) addr_loadLibrary,
+                                     addr_dllString, 0, NULL);
+        WaitForSingleObject(hThread, INFINITE);
+        GetExitCodeThread(hThread, &hLibModule);
+        CloseHandle(hThread);
+        VirtualFreeEx(pi->hProcess, addr_dllString, stringBufLen, MEM_RELEASE);
+
+    } catch(const char* err) {
+        std::wcerr << "Error while injecting " << dllName << ": " << err;
+        return;
+    }
+}
+/*/
 void injectDll(PROCESS_INFORMATION* pi, const wchar_t* dllName)
 {
     try {
@@ -69,4 +96,4 @@ void injectDll(PROCESS_INFORMATION* pi, const wchar_t* dllName)
         return;
     }
 }
-
+//*/
