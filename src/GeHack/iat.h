@@ -3,7 +3,8 @@
 // modified
 ///////////////////////////
 
-#pragma once
+#ifndef IAT_H
+#define IAT_H
 
 class CIAT
 {
@@ -25,3 +26,4 @@ public:
 
 };
 
+#endif // IAT_H
