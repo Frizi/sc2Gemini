@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
+#include <signal.h>
 
 #include <boost/program_options.hpp>
 #include <boost/foreach.hpp>
@@ -10,6 +11,13 @@
 
 #include "injections.h"
 
+// messages
+
+#define MSG_PREFIX "gemini."
+#define MESSAGE_LOADLIB MSG_PREFIX "loadLib"
+#define MESSAGE_INJECT MSG_PREFIX "inject"
+#define MESSAGE_EXIT MSG_PREFIX "exit"
+
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
@@ -17,6 +25,13 @@ std::vector<fs::path> libraries;
 
 void addLibraries(const std::vector<std::string> &libs);
 void searchForLibraries(const std::vector<std::string> &directories);
+
+bool exitSignalState = false;
+
+void sigInt(int sig)
+{
+    exitSignalState = true;
+}
 
 int main(int argc, const char **argv)
 {
@@ -56,6 +71,7 @@ int main(int argc, const char **argv)
 
     fs::path appPath = fs::path(application);
 
+    signal(SIGINT, &sigInt);
     std::cout << "starting server" << std::endl;
     CsIpc::Server server("gemini");
 
@@ -68,6 +84,51 @@ int main(int argc, const char **argv)
         std::cout << "loading " << lib << std::endl;
         injectDll(pi, lib.wstring().c_str());
         //Sleep(2);
+    }
+
+    // server loop
+    CsIpc::EventMessage msg;
+    bool done = false;
+    bool exitState = false;
+    while(!done)
+    {
+        // event loop
+        while(server.Peek(msg))
+        {
+            std::string eventType = msg.getEventType();
+            if( eventType == MESSAGE_LOADLIB )
+            {
+                fs::path pathToLib(msg.getParamString(0));
+            }
+            else if( eventType == MESSAGE_EXIT )
+            {
+                // prepare for exit
+                exitState = true;
+                server.Broadcast(msg);
+            }
+            else
+                server.Broadcast(msg);
+        }
+
+        // exit condition
+        if(exitState)
+        {
+            if(server.GetNumOfClients() == 0)
+                done = true;
+        }
+
+        // check for signal
+        if(exitSignalState && !exitState)
+        {
+            CsIpc::EventMessage exitMsg;
+
+            exitMsg.setEventType( MESSAGE_EXIT );
+            server.Broadcast(exitMsg);
+            exitState = true;
+        }
+        else
+            // do not use too many resources
+            Sleep(1);
     }
 
     return 0;
