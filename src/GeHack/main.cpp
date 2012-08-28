@@ -83,12 +83,9 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *filename,DWORD access, DWORD share, LPSE
 	return h;
 }
 
-extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvReserved)
+DWORD ThreadMain(void* param)
 {
-    if(fdwReason == DLL_PROCESS_ATTACH)
-    {
-        DisableThreadLibraryCalls(module);
-        try {
+    try {
             CIAT iat;
             iat.SetParentModule(GetModuleHandle(NULL));
             //iat.SetParentModule(module);
@@ -107,7 +104,17 @@ extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvRese
 			return false;
         }
 
-        MessageBox(NULL,L"GeHack injection successful",L"GeHack.dll",MB_ICONEXCLAMATION);
+        MessageBox(NULL,L"GeHack thread injection created",L"GeHack.dll",MB_ICONEXCLAMATION);
+        return 0;
+}
+
+
+extern "C" BOOL APIENTRY DllMain(HMODULE module, DWORD fdwReason, LPVOID lpvReserved)
+{
+    if(fdwReason == DLL_PROCESS_ATTACH)
+    {
+        DisableThreadLibraryCalls(module);
+        CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ThreadMain, NULL, 0, NULL);
     }
     else if(fdwReason == DLL_PROCESS_DETACH)
     {

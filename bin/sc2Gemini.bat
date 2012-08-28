@@ -1,1 +1,1 @@
-findEditor.exe | Gemini.exe -L .\plugins
+findEditor.exe | Gemini.exe -L .\plugins -r -
