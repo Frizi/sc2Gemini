@@ -48,7 +48,7 @@
 			<Add directory=".\cs-ipc\cs-ipc" />
 		</Compiler>
 		<Linker>
-			<Add option="-lGeminiClient.a" />
+			<Add option="-lGeminiClient" />
 			<Add directory=".\cs-ipc\cs-ipc\csipc" />
 			<Add directory="bin" />
 		</Linker>

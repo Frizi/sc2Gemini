@@ -7,5 +7,6 @@
 		<Project filename="GeminiTest.cbp" />
 		<Project filename="GeminiClient.cbp" />
 		<Project filename="findEditor.cbp" />
+		<Project filename="cs-ipc/cs-ipc/cs-ipc.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>
