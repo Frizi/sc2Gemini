@@ -20,6 +20,8 @@
 				</Compiler>
 				<Linker>
 					<Add option="-lcs-ipc-d" />
+					<Add option="-lole32" />
+					<Add option="-loleaut32" />
 					<Add library="user32" />
 				</Linker>
 			</Target>
@@ -38,6 +40,8 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-lcs-ipc" />
+					<Add option="-lole32" />
+					<Add option="-loleaut32" />
 					<Add library="user32" />
 				</Linker>
 			</Target>
@@ -46,6 +50,7 @@
 			<Add option="-DUNICODE" />
 			<Add option="-D_UNICODE" />
 			<Add directory=".\cs-ipc\cs-ipc" />
+			<Add directory=".\src\" />
 		</Compiler>
 		<Linker>
 			<Add option="-lGeminiClient" />

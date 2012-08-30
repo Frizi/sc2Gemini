@@ -17,6 +17,7 @@
 #define MESSAGE_LOADLIB MSG_PREFIX "loadLib"
 #define MESSAGE_INJECT MSG_PREFIX "inject"
 #define MESSAGE_EXIT MSG_PREFIX "exit"
+#define MESSAGE_WRITE MSG_PREFIX "write"
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -86,6 +87,8 @@ int main(int argc, const char **argv)
         //Sleep(2);
     }
 
+    std::cout << "pooling event" << std::endl;
+
     // server loop
     CsIpc::EventMessage msg;
     bool done = false;
@@ -105,6 +108,20 @@ int main(int argc, const char **argv)
                 // prepare for exit
                 exitState = true;
                 server.Broadcast(msg);
+            }
+            else if( eventType == MESSAGE_WRITE )
+            {
+                if(msg.paramCount() == 1)
+                {
+                    if(msg.getParameterType(0) == CsIpc::T_STR)
+                    {
+                        std::cout << msg.getParamString(0) << std::endl;
+                    }
+                    else if(msg.getParameterType(0) == CsIpc::T_WSTR)
+                    {
+                        std::wcout << msg.getParamWstring(0) << std::endl;
+                    }
+                }
             }
             else
                 server.Broadcast(msg);

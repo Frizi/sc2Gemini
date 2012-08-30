@@ -3,30 +3,14 @@
 #include "iat.h"
 
 #include <sstream>
+#include <csipc/Client.h>
 
+volatile bool CreateFileWait = false;
 
-HANDLE __stdcall CreateFileWWrap(WCHAR *filename,DWORD access, DWORD share, LPSECURITY_ATTRIBUTES sec, DWORD disp, DWORD flags, HANDLE templatef)
+HANDLE __stdcall CreateFileWWrap(WCHAR *fn,DWORD access, DWORD share, LPSECURITY_ATTRIBUTES sec, DWORD disp, DWORD flags, HANDLE templatef)
 {
-    // anything will be done before executing original CreateFileW
-    // goal is to detect map save and send on message on next read
-
-
-
-    //bool triggered = false;
-
-    //WideCharToMultiByte(CP_ACP,0,fn,-1,filename,maxMessageLen,NULL,NULL);
-
-
-
-    /* // debug filename output
-    strcpy(msg, "msg.print.CreateFileW: ");
-    strcat(msg,filename);
-    if(access & GENERIC_READ)
-        strcat(msg, " r");
-    if(access & GENERIC_WRITE)
-        strcat(msg, " w");
-    client.Write(msg,maxMessageLen);
-    //*/
+    WCHAR* filename = new WCHAR[wcslen(fn) + 1];
+    wcscpy(filename, fn);
 
     if((!(access & GENERIC_WRITE)) && (access & GENERIC_READ)) // this handle should have only read permissions
     {
@@ -59,11 +43,13 @@ HANDLE __stdcall CreateFileWWrap(WCHAR *filename,DWORD access, DWORD share, LPSE
 
 
             // wait for message from external process
-            MessageBox(NULL,L"Components ready to edit",L"GeHack.dll",MB_ICONEXCLAMATION);
+            CreateFileWait = true;
+            while(CreateFileWait) Sleep(2);
+
         }
     }
     // finally, execute original funcion
-    HANDLE h = CreateFileW(filename,access,share,sec,disp,flags,templatef);
+    HANDLE h = CreateFileW(fn,access,share,sec,disp,flags,templatef);
 
     // and save temps if triggered
     /*
@@ -104,7 +90,48 @@ DWORD ThreadMain(void* param)
 			return false;
         }
 
-        MessageBox(NULL,L"GeHack thread injection created",L"GeHack.dll",MB_ICONEXCLAMATION);
+        CsIpc::Client client("GeHack", "gemini");
+        CsIpc::EventMessage msg;
+
+        bool done = false;
+        while(!done)
+        {
+            // process events from server
+            while(client.Peek(msg))
+            {
+
+            }
+
+            if(CreateFileWait)
+            {
+                CsIpc::EventMessage saveMsg;
+                saveMsg.setEventType("mapSave");
+                client.Send(saveMsg);
+                int numClients = client.ClientsRegistered("mapSave");
+
+                CsIpc::EventMessage writeMsg("gemini.write");
+
+                std::stringstream sstream;
+                sstream << "save intercepted\n"
+                           "num clients: " << numClients;
+                writeMsg.pushParam(sstream.str());
+                client.Send(writeMsg);
+
+                for(int i = 0; i < numClients; i++)
+                {
+                    client.WaitForEvent(msg, "saveReturn");
+                }
+                writeMsg.clear();
+                writeMsg.pushParam("save returned");
+                client.Send(writeMsg);
+
+
+                CreateFileWait = false;
+            }
+
+        }
+
+
         return 0;
 }
 
