@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
-#include <signal.h>
+#include <Windows.h>
 
 #include <boost/program_options.hpp>
 #include <boost/foreach.hpp>
@@ -26,13 +26,9 @@ std::vector<fs::path> libraries;
 
 void addLibraries(const std::vector<std::string> &libs);
 void searchForLibraries(const std::vector<std::string> &directories);
+BOOL WINAPI ConsoleHandler(DWORD CEvent);
 
 bool exitSignalState = false;
-
-void sigInt(int sig)
-{
-    exitSignalState = true;
-}
 
 int main(int argc, const char **argv)
 {
@@ -72,7 +68,8 @@ int main(int argc, const char **argv)
 
     fs::path appPath = fs::path(application);
 
-    signal(SIGINT, &sigInt);
+    SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleHandler,TRUE);
+
     std::cout << "starting server" << std::endl;
     CsIpc::Server server("gemini");
 
@@ -149,6 +146,20 @@ int main(int argc, const char **argv)
     }
 
     return 0;
+}
+
+BOOL WINAPI ConsoleHandler(DWORD CEvent)
+{
+    switch(CEvent)
+    {
+    case CTRL_C_EVENT:
+    case CTRL_CLOSE_EVENT:
+    case CTRL_SHUTDOWN_EVENT:
+    case CTRL_LOGOFF_EVENT:
+        exitSignalState = true;
+        break;
+    }
+    return TRUE;
 }
 
 void addLibraries(const std::vector<std::string> &libs)
